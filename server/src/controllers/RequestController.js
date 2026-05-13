@@ -5,41 +5,42 @@ class RequestController {
   static async getAllRequestsUser(req, res) {
     const { user } = res.locals;
     try {
-      const requests = await RequestService.getAllRequestsUser(user.id);
+      const sessions = await RequestService.getAllRequestsUser(user.id);
 
-      if (requests.length === 0) {
+      if (sessions.length === 0) {
         return res
           .status(200)
-          .json(formatResponse(200, "У пользователя нет запросов", []));
+          .json(formatResponse(200, "У пользователя нет сессий", []));
       }
+
       return res
         .status(200)
-        .json(formatResponse(200, "Запросы пользователя", requests));
+        .json(formatResponse(200, "Сессии пользователя", sessions));
     } catch (error) {
       console.log("======== RequestController.getAllRequestsUser =========");
       console.log(error);
       return res
         .status(500)
-        .json(formatResponse(500, "Ошибка при получении запросов"));
+        .json(formatResponse(500, "Ошибка при получении сессий"));
     }
   }
 
   static async getAllRequestsAndResponsesUser(req, res) {
     const { user } = res.locals;
     try {
-      const requests = await RequestService.getAllRequestsAndResponsesUser(
+      const sessions = await RequestService.getAllRequestsAndResponsesUser(
         user.id,
       );
-      if (requests.length === 0) {
+
+      if (sessions.length === 0) {
         return res
           .status(200)
-          .json(
-            formatResponse(200, "У пользователя нет запросов и ответов", []),
-          );
+          .json(formatResponse(200, "У пользователя нет сессий и сообщений", []));
       }
+
       return res
         .status(200)
-        .json(formatResponse(200, "Запросы и ответы пользователя", requests));
+        .json(formatResponse(200, "Сессии и сообщения пользователя", sessions));
     } catch (error) {
       console.log(
         "======== RequestController.getAllRequestsAndResponsesUser =========",
@@ -47,7 +48,7 @@ class RequestController {
       console.log(error);
       return res
         .status(500)
-        .json(formatResponse(500, "Ошибка при получении запросов и ответов"));
+        .json(formatResponse(500, "Ошибка при получении сессий и сообщений"));
     }
   }
 
@@ -55,18 +56,17 @@ class RequestController {
     const { user } = res.locals;
     const { id } = req.params;
     try {
-      const request = await RequestService.getOneRequestAndResponseUser(
+      const session = await RequestService.getOneRequestAndResponseUser(
         Number(id),
       );
-      if (request.user_id !== user.id) {
-        return res.status(404).json(formatResponse(404, "Запрос не найден"));
+
+      if (!session || session.user_id !== user.id) {
+        return res.status(404).json(formatResponse(404, "Сессия не найдена"));
       }
-      if (!request) {
-        return res.status(404).json(formatResponse(404, "Запрос не найден"));
-      }
+
       return res
         .status(200)
-        .json(formatResponse(200, "Запрос и ответ пользователя", request));
+        .json(formatResponse(200, "Сессия и сообщения пользователя", session));
     } catch (error) {
       console.log(
         "======== RequestController.getOneRequestAndResponseUser =========",
@@ -74,7 +74,7 @@ class RequestController {
       console.log(error);
       return res
         .status(500)
-        .json(formatResponse(500, "Ошибка при получении запроса и ответа"));
+        .json(formatResponse(500, "Ошибка при получении сессии"));
     }
   }
 
@@ -84,25 +84,29 @@ class RequestController {
     if (!content || !type || !level) {
       return res
         .status(400)
-        .json(formatResponse(400, "Недостаточно данных для создания запроса"));
+        .json(formatResponse(400, "Недостаточно данных для создания сессии"));
     }
 
     try {
-      const request = await RequestService.createRequest({
+      const session = await RequestService.createRequest({
         content,
         type,
         level,
+        status: "active",
         user_id: user.id,
       });
+
+      await RequestService.createMessages(session.id, [{ role: "user", content }]);
+
       return res
         .status(201)
-        .json(formatResponse(201, "Запрос создан", request));
+        .json(formatResponse(201, "Сессия создана", session));
     } catch (error) {
       console.log("======== RequestController.createRequest =========");
       console.log(error);
       return res
         .status(500)
-        .json(formatResponse(500, "Ошибка при создании запроса"));
+        .json(formatResponse(500, "Ошибка при создании сессии"));
     }
   }
 
@@ -113,28 +117,31 @@ class RequestController {
     if (Number.isNaN(Number(id))) {
       return res
         .status(400)
-        .json(formatResponse(400, "Некорректный ID запроса"));
+        .json(formatResponse(400, "Некорректный ID сессии"));
     }
+
     try {
-      const updatedRequest = await RequestService.updateRequest(
+      const updatedSession = await RequestService.updateRequest(
         user.id,
         Number(id),
         comment,
       );
-      if (!updatedRequest) {
+
+      if (!updatedSession) {
         return res
           .status(404)
-          .json(formatResponse(404, "Запрос не найден или доступ запрещен"));
+          .json(formatResponse(404, "Сессия не найдена или доступ запрещен"));
       }
+
       return res
         .status(200)
-        .json(formatResponse(200, "Запрос обновлен", updatedRequest));
+        .json(formatResponse(200, "Сессия обновлена", updatedSession));
     } catch (error) {
       console.log("======== RequestController.updateRequest =========");
       console.log(error);
       return res
         .status(500)
-        .json(formatResponse(500, "Ошибка при обновлении запроса"));
+        .json(formatResponse(500, "Ошибка при обновлении сессии"));
     }
   }
 
@@ -144,25 +151,24 @@ class RequestController {
     if (Number.isNaN(Number(id))) {
       return res
         .status(400)
-        .json(formatResponse(400, "Некорректный ID запроса"));
+        .json(formatResponse(400, "Некорректный ID сессии"));
     }
+
     try {
-      const deletedRequest = await RequestService.deleteRequest(
-        user.id,
-        Number(id),
-      );
-      if (!deletedRequest) {
+      const deletedSession = await RequestService.deleteRequest(user.id, Number(id));
+      if (!deletedSession) {
         return res
           .status(404)
-          .json(formatResponse(404, "Запрос не найден или доступ запрещен"));
+          .json(formatResponse(404, "Сессия не найдена или доступ запрещен"));
       }
-      return res.status(200).json(formatResponse(200, "Запрос удален"));
+
+      return res.status(200).json(formatResponse(200, "Сессия удалена"));
     } catch (error) {
       console.log("======== RequestController.deleteRequest =========");
       console.log(error);
       return res
         .status(500)
-        .json(formatResponse(500, "Ошибка при удалении запроса"));
+        .json(formatResponse(500, "Ошибка при удалении сессии"));
     }
   }
 }

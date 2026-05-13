@@ -1,13 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import "./SignInForm.css";
-import { UserValidator } from "../../../../entities/user/model/UserValidator";
+import { useAppDispatch } from "@/app/store/hooks";
+import { setUser } from "@/entities/user/model/userSlice";
 import UserApi from "../../../../entities/user/api/UserApi";
+import { UserValidator } from "../../../../entities/user/model/UserValidator";
 import { setAccessToken } from "../../../../shared/lib/axiosInstance";
 import FormInput from "../../../../shared/ui/FormInput/FormInput";
+import "./SignInForm.css";
 
 export default function SignInForm() {
+  const dispatch = useAppDispatch();
   const initialValue = { email: "", password: "" };
   const [signInData, setSignInData] = useState(initialValue);
 
@@ -33,6 +36,7 @@ export default function SignInForm() {
 
     if (statusCode === 200) {
       setAccessToken(data.accessToken);
+      dispatch(setUser(data.user));
       window.location.href = "/";
     } else {
       alert(error || "Ошибка при входе");

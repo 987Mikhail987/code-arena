@@ -1,14 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import "./SignUpForm.css";
-import { UserValidator } from "../../../../entities/user/model/UserValidator";
+import { useAppDispatch } from "@/app/store/hooks";
 import UserApi from "../../../../entities/user/api/UserApi";
+import { UserValidator } from "../../../../entities/user/model/UserValidator";
+import { setUser } from "../../../../entities/user/model/userSlice";
+import type { UserRole } from "../../../../entities/user/model/types";
 import { setAccessToken } from "../../../../shared/lib/axiosInstance";
 import FormInput from "../../../../shared/ui/FormInput/FormInput";
+import "./SignUpForm.css";
 
 export default function SignUpForm() {
-  const initialValue = { name: "", email: "", password: "" };
+  const dispatch = useAppDispatch();
+  const initialValue: {
+    name: string;
+    email: string;
+    password: string;
+    role: UserRole;
+  } = {
+    name: "",
+    email: "",
+    password: "",
+    role: "candidate",
+  };
+
   const [signUpData, setSignUpData] = useState(initialValue);
   const [repeat, setRepeat] = useState("");
 
@@ -30,14 +45,16 @@ export default function SignUpForm() {
       return;
     }
 
-    const { statusCode, data, message } = await UserApi.register(signUpData);
+    const { statusCode, data, message, error } = await UserApi.register(signUpData);
 
     if (statusCode === 201) {
       setAccessToken(data.accessToken);
+      dispatch(setUser(data.user));
       window.location.href = "/";
-    } else {
-      alert(message || "Ошибка при регистрации");
+      return;
     }
+
+    alert(error || message || "Ошибка при регистрации");
   }
 
   return (
@@ -70,6 +87,26 @@ export default function SignUpForm() {
           value={signUpData.password}
           label="Пароль"
         />
+        <div className="form-input-wrapper">
+          <select
+            id="role"
+            name="role"
+            className="form-input"
+            value={signUpData.role}
+            onChange={(event) =>
+              setSignUpData({
+                ...signUpData,
+                role: event.target.value as UserRole,
+              })
+            }
+          >
+            <option value="candidate">Кандидат</option>
+            <option value="intervier">Интервьюер</option>
+          </select>
+          <label className="form-input-label" htmlFor="role">
+            Роль
+          </label>
+        </div>
         <FormInput
           placeholder=" "
           name="repeat"

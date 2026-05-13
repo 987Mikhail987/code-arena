@@ -2,28 +2,12 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("Requests", {
+    await queryInterface.createTable("Sessions", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
-      },
-      type: {
-        type: Sequelize.ENUM("explain", "fix", "review"),
-        allowNull: false,
-      },
-      level: {
-        type: Sequelize.ENUM("student", "junior", "middle", "senior"),
-        allowNull: false,
-      },
-      content: {
-        type: Sequelize.TEXT,
-        allowNull: false,
-      },
-      comment: {
-        type: Sequelize.TEXT,
-        allowNull: true,
       },
       user_id: {
         type: Sequelize.INTEGER,
@@ -34,6 +18,27 @@ module.exports = {
         },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
+      },
+      type: {
+        type: Sequelize.ENUM("explain", "fix", "review"),
+        allowNull: false,
+      },
+      status: {
+        type: Sequelize.ENUM("active", "complited"),
+        allowNull: false,
+        defaultValue: "active",
+      },
+      level: {
+        type: Sequelize.ENUM("junior", "middle", "senior"),
+        allowNull: false,
+      },
+      topic: {
+        type: Sequelize.TEXT,
+        allowNull: false,
+      },
+      result: {
+        type: Sequelize.JSONB,
+        allowNull: true,
       },
       createdAt: {
         allowNull: false,
@@ -47,7 +52,10 @@ module.exports = {
       },
     });
   },
-  async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("Requests");
+  async down(queryInterface) {
+    await queryInterface.dropTable("Sessions");
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_Sessions_type";');
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_Sessions_status";');
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_Sessions_level";');
   },
 };

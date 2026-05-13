@@ -2,26 +2,24 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import type { Dispatch, SetStateAction } from "react";
-import type { User } from "@/entities/user/model/types";
+import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
+import { selectUser } from "@/entities/user/model/selectors";
+import { clearUser } from "@/entities/user/model/userSlice";
+import UserApi from "@/entities/user/api/UserApi";
+import { setAccessToken } from "@/shared/lib/axiosInstance";
 import "./Header.css";
-import UserApi from "../../entities/user/api/UserApi";
-import { setAccessToken } from "../../shared/lib/axiosInstance";
 
-type HeaderProps = {
-  user: User | null;
-  setUser: Dispatch<SetStateAction<User | null>>;
-};
-
-export default function Header({ user, setUser }: HeaderProps) {
+export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(selectUser);
 
   async function handleLogout() {
     const { statusCode } = await UserApi.logout();
 
     if (statusCode === 200) {
-      setUser(null);
+      dispatch(clearUser());
       setAccessToken("");
       router.push("/auth?mode=signup");
     }
@@ -44,14 +42,9 @@ export default function Header({ user, setUser }: HeaderProps) {
   return (
     <header className="site-header">
       <div className="app-container header-content">
-
         <nav className="header-nav">
           <Link href="/" className={getNavLinkClassName("/")}>
             Главная
-          </Link>
-
-          <Link href="/game" className={getNavLinkClassName("/game")}>
-            Игра
           </Link>
 
           {user ? (

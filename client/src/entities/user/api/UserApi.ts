@@ -1,6 +1,6 @@
-import { axiosInstance } from "../../../shared/lib/axiosInstance";
-import type { LoginData, RegisterData } from "../model/types";
 import axios from "axios";
+import { axiosInstance } from "../../../shared/lib/axiosInstance";
+import type { LoginData, RegisterData, UserRole } from "../model/types";
 
 export default class UserApi {
   static async register(userData: RegisterData) {
@@ -29,7 +29,7 @@ export default class UserApi {
 
   static async refresh() {
     try {
-      const response = await axiosInstance.get("/auth/refresh");
+      const response = await axiosInstance.post("/auth/refresh");
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -51,9 +51,9 @@ export default class UserApi {
     }
   }
 
-  static async updateProfile(payload: { name: string }) {
+  static async updateProfile(payload: { name: string; role?: UserRole }) {
     try {
-      const response = await axiosInstance.put("/users/profile", payload);
+      const response = await axiosInstance.put("/profile", payload);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -64,11 +64,11 @@ export default class UserApi {
   }
 
   static async changePassword(payload: {
-    currentPassword: string;
+    password: string;
     newPassword: string;
   }) {
     try {
-      const response = await axiosInstance.put("/users/password", payload);
+      const response = await axiosInstance.put("/profile/password", payload);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -78,9 +78,9 @@ export default class UserApi {
     }
   }
 
-  static async deleteAccount(payload: { password: string }) {
+  static async deleteAccount() {
     try {
-      const response = await axiosInstance.delete("/users/me", { data: payload });
+      const response = await axiosInstance.delete("/profile");
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {

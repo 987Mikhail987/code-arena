@@ -1,72 +1,81 @@
-const { Request, Response } = require("../db/models");
+const { Message, Session } = require("../db/models");
 
 class RequestService {
   static async getAllRequestsUser(userId) {
-    const requests = await Request.findAll({
+    return Session.findAll({
       where: { user_id: userId },
       order: [["createdAt", "DESC"]],
     });
-    if (requests.length === 0) {
-      return [];
-    }
-    return requests;
   }
 
   static async getAllRequestsAndResponsesUser(userId) {
-    const requests = await Request.findAll({
+    return Session.findAll({
       where: { user_id: userId },
-      include: [{ model: Response, as: "response" }],
+      include: [{ model: Message, as: "messages" }],
       order: [["createdAt", "DESC"]],
     });
-    if (requests.length === 0) {
-      return [];
-    }
-    return requests;
   }
 
   static async getOneRequestAndResponseUser(requestId) {
-    const request = await Request.findByPk(requestId, {
-      include: [{ model: Response, as: "response" }],
+    return Session.findByPk(requestId, {
+      include: [{ model: Message, as: "messages" }],
     });
-    if (!request) {
-      return null;
-    }
-    return request;
   }
 
   static async createRequest(requestData) {
-    const { content, type, level } = requestData;
-    if (!content || !type || !level) {
+    const { topic, content, type, level } = requestData;
+    const sessionTopic = topic || content;
+
+    if (!sessionTopic || !type || !level) {
       return null;
     }
-    const request = await Request.create(requestData);
-    return request;
+
+    return Session.create({
+      ...requestData,
+      topic: sessionTopic,
+    });
+  }
+
+  static async createMessages(sessionId, messages) {
+    if (!messages.length) {
+      return [];
+    }
+
+    const createdMessages = await Message.bulkCreate(
+      messages.map((message) => ({
+        ...message,
+        session_id: sessionId,
+      })),
+      { returning: true },
+    );
+
+    return createdMessages.map((message) => message.get());
   }
 
   static async updateRequest(userId, requestId, comment) {
-    const request = await Request.findByPk(requestId);
-    if (!request) {
+    const session = await Session.findByPk(requestId);
+    if (!session || session.user_id !== userId) {
       return null;
     }
-    if (request.user_id !== userId) {
-      return null;
-    }
+
     if (comment) {
-      request.comment = comment;
+      session.result = {
+        ...(session.result || {}),
+        comment,
+      };
     }
-    await request.save();
-    return request;
+
+    await session.save();
+    return session;
   }
 
   static async deleteRequest(userId, requestId) {
-    const request = await Request.findByPk(requestId);
-    if (!request) {
+    const session = await Session.findByPk(requestId);
+    if (!session || session.user_id !== userId) {
       return null;
     }
-    if (request.user_id !== userId) {
-      return null;
-    }
-    await request.destroy();
+
+    await session.destroy();
     return true;
   }
 }

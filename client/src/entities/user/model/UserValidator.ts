@@ -10,27 +10,27 @@ export class UserValidator {
     const hasUpperCase = /[A-Z]/;
     const hasLowerCase = /[a-z]/;
     const hasDigits = /\d/;
-    const hasSpecialSymbols = /[!@#$%^&*()-+,.""<>{}]/;
+    const hasSpecialSymbols = /[!@#$%^&*()-+,.\""<>{}]/;
     const isValidLength = password.length >= 8;
 
-    if (
-      !hasUpperCase.test(password) ||
-      !hasLowerCase.test(password) ||
-      !hasDigits.test(password) ||
-      !hasSpecialSymbols.test(password) ||
-      !isValidLength
-    ) {
-      return false;
-    }
-
-    return true;
+    return (
+      hasUpperCase.test(password) &&
+      hasLowerCase.test(password) &&
+      hasDigits.test(password) &&
+      hasSpecialSymbols.test(password) &&
+      isValidLength
+    );
   }
 
   static validateRegistrationData(userData: RegisterData) {
-    const { name, email, password } = userData;
+    const { name, email, password, role } = userData;
 
     if (!name || typeof name !== "string" || name.trim().length === 0) {
       return { isValid: false, error: "Некорректное имя пользователя" };
+    }
+
+    if (!role || !["candidate", "intervier"].includes(role)) {
+      return { isValid: false, error: "Некорректная роль пользователя" };
     }
 
     if (

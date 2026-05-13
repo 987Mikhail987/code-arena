@@ -25,15 +25,15 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const previousRequest = error.config;
 
-    if (error.response?.status === 403 && !previousRequest.sent) {
+    if (error.response?.status === 403 && previousRequest && !previousRequest.sent) {
       previousRequest.sent = true;
 
       try {
-        const { data } = await axiosInstance.get("/auth/refresh");
+        const { data } = await axiosInstance.post("/auth/refresh");
         const newToken = data.data.accessToken;
 
         setAccessToken(newToken);
-        previousRequest.headers.Authorization = `Bearer ${accessToken}`;
+        previousRequest.headers.Authorization = `Bearer ${newToken}`;
 
         return axiosInstance(previousRequest);
       } catch (refreshError) {
