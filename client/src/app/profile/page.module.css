@@ -79,6 +79,17 @@
   gap: 16px;
 }
 
+.formField {
+  width: 100%;
+}
+
+.formError {
+  margin: 8px 4px 0;
+  color: #b24545;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 .selectWrapper {
   position: relative;
 }

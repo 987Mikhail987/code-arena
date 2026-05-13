@@ -5,8 +5,8 @@ import StoreProvider from "./providers/StoreProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Game",
-  description: "Play",
+  title: "CodeArena",
+  description: "Learn",
 };
 
 type RootLayoutProps = {

@@ -18,3 +18,8 @@ export type RegisterData = {
   password: string;
   role: UserRole;
 };
+
+export type AuthResponseData = {
+  user: User;
+  accessToken: string;
+};

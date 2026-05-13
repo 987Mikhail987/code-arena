@@ -13,8 +13,8 @@ const initialState: UserState = {
   status: "idle",
 };
 
-export const bootstrapUser = createAsyncThunk(
-  "user/bootstrapUser",
+export const reloadUser = createAsyncThunk(
+  "user/reloadUser",
   async (_, { rejectWithValue }) => {
     try {
       const response = await UserApi.refresh();
@@ -37,9 +37,9 @@ const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    setUser(state, action: PayloadAction<User | null>) {
+    setUser(state, action: PayloadAction<User>) {
       state.data = action.payload;
-      state.status = action.payload ? "authenticated" : "guest";
+      state.status = "authenticated";
     },
     clearUser(state) {
       state.data = null;
@@ -48,16 +48,16 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(bootstrapUser.pending, (state) => {
+      .addCase(reloadUser.pending, (state) => {
         if (state.status === "idle") {
           state.status = "loading";
         }
       })
-      .addCase(bootstrapUser.fulfilled, (state, action) => {
+      .addCase(reloadUser.fulfilled, (state, action) => {
         state.data = action.payload;
         state.status = "authenticated";
       })
-      .addCase(bootstrapUser.rejected, (state) => {
+      .addCase(reloadUser.rejected, (state) => {
         state.data = null;
         state.status = "guest";
       });

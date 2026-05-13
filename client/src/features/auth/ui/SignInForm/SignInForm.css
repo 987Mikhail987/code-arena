@@ -5,6 +5,10 @@
   gap: 30px;
 }
 
+.form-field {
+  width: 100%;
+}
+
 .form-action-button {
   margin-top: 25px;
   text-transform: uppercase;
@@ -32,4 +36,11 @@
   color: #746859;
   font-size: 13px;
   line-height: 1.5;
+}
+
+.form-error {
+  margin: 8px 4px 0;
+  color: #b24545;
+  font-size: 13px;
+  line-height: 1.4;
 }

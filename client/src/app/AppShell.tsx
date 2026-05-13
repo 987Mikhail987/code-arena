@@ -2,7 +2,7 @@
 
 import { useEffect, type ReactNode } from "react";
 import { useAppDispatch } from "./store/hooks";
-import { bootstrapUser } from "@/entities/user/model/userSlice";
+import { reloadUser } from "@/entities/user/model/userSlice";
 import Header from "@/widgets/Header/Header";
 import "./AppShell.css";
 
@@ -14,7 +14,7 @@ export default function AppShell({ children }: AppShellProps) {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    void dispatch(bootstrapUser());
+    void dispatch(reloadUser());
   }, [dispatch]);
 
   return (
