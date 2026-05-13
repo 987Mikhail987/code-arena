@@ -1,11 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { Dispatch, SetStateAction } from "react";
 import type { User } from "@/entities/user/model/types";
-import gameLogo from "@/shared/assets/images/55bbdd7a-914d-43ea-a168-beb6855b0792.png";
 import "./Header.css";
 import UserApi from "../../entities/user/api/UserApi";
 import { setAccessToken } from "../../shared/lib/axiosInstance";
@@ -46,14 +44,6 @@ export default function Header({ user, setUser }: HeaderProps) {
   return (
     <header className="site-header">
       <div className="app-container header-content">
-        <Link href="/" className="brand-link">
-          <Image
-            src={gameLogo}
-            alt="Game logo"
-            className="brand-logo"
-            priority
-          />
-        </Link>
 
         <nav className="header-nav">
           <Link href="/" className={getNavLinkClassName("/")}>
