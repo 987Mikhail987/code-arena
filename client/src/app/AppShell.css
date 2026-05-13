@@ -1,0 +1,32 @@
+.layout-content {
+  padding: 24px 0 96px;
+}
+
+.app-footer {
+  border-top: 1px solid rgba(146, 118, 85, 0.18);
+  background-color: rgba(255, 252, 246, 0.92);
+  backdrop-filter: blur(12px);
+}
+
+.footer-content {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: #6b5f4b;
+  font-size: 14px;
+}
+
+@media (max-width: 720px) {
+  .layout-content {
+    padding-bottom: 56px;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    justify-content: center;
+    padding: 18px 0;
+    text-align: center;
+  }
+}
