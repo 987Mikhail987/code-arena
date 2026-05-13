@@ -1,9 +1,22 @@
-import { axiosInstance } from "../../../shared/lib/axiosInstance";
-import type { LoginData, RegisterData } from "../model/types";
 import axios from "axios";
+import { axiosInstance } from "../../../shared/lib/axiosInstance";
+import type {
+  AuthResponseData,
+  LoginData,
+  RegisterData,
+  User,
+  UserRole,
+} from "../model/types";
+
+type ApiResponse<T> = {
+  statusCode: number;
+  message: string;
+  data: T;
+  error: string | null;
+};
 
 export default class UserApi {
-  static async register(userData: RegisterData) {
+  static async register(userData: RegisterData): Promise<ApiResponse<AuthResponseData>> {
     try {
       const response = await axiosInstance.post("/auth/register", userData);
       return response.data;
@@ -15,7 +28,7 @@ export default class UserApi {
     }
   }
 
-  static async login(userData: LoginData) {
+  static async login(userData: LoginData): Promise<ApiResponse<AuthResponseData>> {
     try {
       const response = await axiosInstance.post("/auth/login", userData);
       return response.data;
@@ -27,9 +40,9 @@ export default class UserApi {
     }
   }
 
-  static async refresh() {
+  static async refresh(): Promise<ApiResponse<AuthResponseData>> {
     try {
-      const response = await axiosInstance.get("/auth/refresh");
+      const response = await axiosInstance.post("/auth/refresh");
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -39,7 +52,7 @@ export default class UserApi {
     }
   }
 
-  static async logout() {
+  static async logout(): Promise<ApiResponse<null>> {
     try {
       const response = await axiosInstance.post("/auth/logout");
       return response.data;
@@ -51,9 +64,12 @@ export default class UserApi {
     }
   }
 
-  static async updateProfile(payload: { name: string }) {
+  static async updateProfile(payload: {
+    name: string;
+    role?: UserRole;
+  }): Promise<ApiResponse<User>> {
     try {
-      const response = await axiosInstance.put("/users/profile", payload);
+      const response = await axiosInstance.put("/profile", payload);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -64,11 +80,11 @@ export default class UserApi {
   }
 
   static async changePassword(payload: {
-    currentPassword: string;
+    password: string;
     newPassword: string;
-  }) {
+  }): Promise<ApiResponse<null>> {
     try {
-      const response = await axiosInstance.put("/users/password", payload);
+      const response = await axiosInstance.put("/profile/password", payload);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -78,9 +94,9 @@ export default class UserApi {
     }
   }
 
-  static async deleteAccount(payload: { password: string }) {
+  static async deleteAccount(): Promise<ApiResponse<null>> {
     try {
-      const response = await axiosInstance.delete("/users/me", { data: payload });
+      const response = await axiosInstance.delete("/profile");
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {

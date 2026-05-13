@@ -22,8 +22,8 @@ module.exports = {
         type: Sequelize.TEXT,
         allowNull: false,
       },
-      level: {
-        type: Sequelize.ENUM("student", "junior", "middle", "senior"),
+      role: {
+        type: Sequelize.ENUM("candidate", "intervier"),
         allowNull: false,
       },
       createdAt: {
@@ -38,7 +38,8 @@ module.exports = {
       },
     });
   },
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface) {
     await queryInterface.dropTable("Users");
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_Users_role";');
   },
 };

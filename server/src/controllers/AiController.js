@@ -1,6 +1,5 @@
 const AiService = require("../services/AiService");
 const RequestService = require("../services/RequestService");
-const ResponseService = require("../services/ResponseService");
 const formatResponse = require("../utils/formatResponse");
 
 class AiController {
@@ -26,10 +25,11 @@ class AiController {
     }
 
     try {
-      const request = await RequestService.createRequest({
-        content,
+      const session = await RequestService.createRequest({
+        topic: content,
         type,
         level,
+        status: "complited",
         user_id: user.id,
       });
 
@@ -45,17 +45,17 @@ class AiController {
           );
       }
 
-      const { problem, solution, explanation } = answer;
-      const response = await ResponseService.createResponse({
-        problem,
-        solution,
-        explanation,
-        request_id: request.id,
-      });
+      session.result = answer;
+      await session.save();
+
+      await RequestService.createMessages(session.id, [
+        { role: "user", content },
+        { role: "assistant", content: JSON.stringify(answer) },
+      ]);
 
       return res
         .status(200)
-        .json(formatResponse(200, "Ответ успешно сгенерирован", response));
+        .json(formatResponse(200, "Ответ успешно сгенерирован", session));
     } catch (error) {
       console.log(error);
 
@@ -64,7 +64,7 @@ class AiController {
         .json(
           formatResponse(
             500,
-            "Ошибка при генерации ответа, ошибка на стороне сервера",
+            "Ошибка при генерации ответа на стороне сервера",
             null,
             error.message,
           ),
@@ -72,4 +72,5 @@ class AiController {
     }
   }
 }
+
 module.exports = AiController;

@@ -1,35 +1,31 @@
-'use strict';
+"use strict";
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Responses', {
+    await queryInterface.createTable("Messages", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
       },
-      problem: {
-        type: Sequelize.TEXT,
-        allowNull:false,
-      },
-      solution: {
-        type: Sequelize.TEXT,
-        allowNull:false,  
-      },
-      explanation: {
-        type: Sequelize.TEXT,
-        allowNull:false,
-      },
-      request_id: {
+      session_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: "Requests",
+          model: "Sessions",
           key: "id",
         },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
+      },
+      role: {
+        type: Sequelize.TEXT,
+        allowNull: false,
+      },
+      content: {
+        type: Sequelize.TEXT,
+        allowNull: false,
       },
       createdAt: {
         allowNull: false,
@@ -40,10 +36,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.fn("now"),
-      }
+      },
     });
   },
-  async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Responses');
-  }
+  async down(queryInterface) {
+    await queryInterface.dropTable("Messages");
+  },
 };
