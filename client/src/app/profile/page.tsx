@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
@@ -17,8 +17,9 @@ import { clearUser, setUser } from "@/entities/user/model/userSlice";
 import { setAccessToken } from "@/shared/lib/axiosInstance";
 import FormInput from "@/shared/ui/FormInput/FormInput";
 import styles from "./page.module.css";
+import UserGuard from "@/shared/hocs/UserGuard/UserGuard";
 
-export default function ProfilePage() {
+export function ProfilePage(): ReactNode {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
@@ -71,7 +72,8 @@ export default function ProfilePage() {
     }
 
     profileForm.setError("root", {
-      message: response?.error || response?.message || "Не удалось обновить профиль",
+      message:
+        response?.error || response?.message || "Не удалось обновить профиль",
     });
   }
 
@@ -91,7 +93,8 @@ export default function ProfilePage() {
     }
 
     passwordForm.setError("root", {
-      message: response?.error || response?.message || "Не удалось обновить пароль",
+      message:
+        response?.error || response?.message || "Не удалось обновить пароль",
     });
   }
 
@@ -103,7 +106,9 @@ export default function ProfilePage() {
   }
 
   async function deleteAccountHandler() {
-    const isConfirmed = window.confirm("Удалить аккаунт без возможности восстановления?");
+    const isConfirmed = window.confirm(
+      "Удалить аккаунт без возможности восстановления?",
+    );
     if (!isConfirmed) {
       return;
     }
@@ -120,7 +125,9 @@ export default function ProfilePage() {
       return;
     }
 
-    setAccountMessage(response?.error || response?.message || "Не удалось удалить аккаунт");
+    setAccountMessage(
+      response?.error || response?.message || "Не удалось удалить аккаунт",
+    );
     setIsDeleting(false);
   }
 
@@ -140,7 +147,10 @@ export default function ProfilePage() {
       <div className={styles.grid}>
         <section className={styles.card}>
           <h2 className={styles.cardTitle}>Данные аккаунта</h2>
-          <form className={styles.form} onSubmit={profileForm.handleSubmit(saveProfileHandler)}>
+          <form
+            className={styles.form}
+            onSubmit={profileForm.handleSubmit(saveProfileHandler)}
+          >
             <div className={styles.formField}>
               <FormInput
                 placeholder=" "
@@ -164,7 +174,10 @@ export default function ProfilePage() {
                   <option value="candidate">Кандидат</option>
                   <option value="intervier">Интервьюер</option>
                 </select>
-                <label className={`form-input-label ${styles.selectLabel}`} htmlFor="role">
+                <label
+                  className={`form-input-label ${styles.selectLabel}`}
+                  htmlFor="role"
+                >
                   Роль
                 </label>
               </div>
@@ -175,15 +188,21 @@ export default function ProfilePage() {
               ) : null}
             </div>
             {profileForm.formState.errors.root ? (
-              <p className={styles.formError}>{profileForm.formState.errors.root.message}</p>
+              <p className={styles.formError}>
+                {profileForm.formState.errors.root.message}
+              </p>
             ) : null}
             <button
               className={styles.primaryButton}
               disabled={profileForm.formState.isSubmitting}
             >
-              {profileForm.formState.isSubmitting ? "Сохраняем..." : "Сохранить профиль"}
+              {profileForm.formState.isSubmitting
+                ? "Сохраняем..."
+                : "Сохранить профиль"}
             </button>
-            {profileMessage ? <p className={styles.message}>{profileMessage}</p> : null}
+            {profileMessage ? (
+              <p className={styles.message}>{profileMessage}</p>
+            ) : null}
           </form>
         </section>
 
@@ -220,15 +239,21 @@ export default function ProfilePage() {
               ) : null}
             </div>
             {passwordForm.formState.errors.root ? (
-              <p className={styles.formError}>{passwordForm.formState.errors.root.message}</p>
+              <p className={styles.formError}>
+                {passwordForm.formState.errors.root.message}
+              </p>
             ) : null}
             <button
               className={styles.primaryButton}
               disabled={passwordForm.formState.isSubmitting}
             >
-              {passwordForm.formState.isSubmitting ? "Обновляем..." : "Изменить пароль"}
+              {passwordForm.formState.isSubmitting
+                ? "Обновляем..."
+                : "Изменить пароль"}
             </button>
-            {passwordMessage ? <p className={styles.message}>{passwordMessage}</p> : null}
+            {passwordMessage ? (
+              <p className={styles.message}>{passwordMessage}</p>
+            ) : null}
           </form>
         </section>
       </div>
@@ -236,7 +261,11 @@ export default function ProfilePage() {
       <section className={styles.card}>
         <h2 className={styles.cardTitle}>Действия</h2>
         <div className={styles.actions}>
-          <button type="button" className={styles.secondaryButton} onClick={logoutHandler}>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={logoutHandler}
+          >
             Выйти из аккаунта
           </button>
           <button
@@ -248,8 +277,18 @@ export default function ProfilePage() {
             {isDeleting ? "Удаляем..." : "Удалить аккаунт"}
           </button>
         </div>
-        {accountMessage ? <p className={styles.message}>{accountMessage}</p> : null}
+        {accountMessage ? (
+          <p className={styles.message}>{accountMessage}</p>
+        ) : null}
       </section>
     </div>
+  );
+}
+
+export default function ProfileLayout() {
+  return (
+    <UserGuard mode="authenticated" redirectTo="/auth">
+      <ProfilePage />
+    </UserGuard>
   );
 }

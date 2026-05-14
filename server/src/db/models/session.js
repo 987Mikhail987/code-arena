@@ -1,7 +1,7 @@
 "use strict";
 const { Model } = require("sequelize");
 
-const SESSION_TYPES = ["explain", "fix", "review"];
+const SESSION_TYPES = ["ai", "live"];
 const SESSION_STATUSES = ["active", "complited"];
 const SESSION_LEVELS = ["junior", "middle", "senior"];
 

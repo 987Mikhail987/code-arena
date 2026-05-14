@@ -5,14 +5,15 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useAppDispatch } from "@/app/store/hooks";
 import { setUser } from "@/entities/user/model/userSlice";
-import UserApi from "../../../../entities/user/api/UserApi";
+import UserApi from "@/entities/user/api/UserApi";
 import {
   registerSchema,
   type RegisterFormValues,
-} from "../../../../entities/user/model/schemas";
-import { setAccessToken } from "../../../../shared/lib/axiosInstance";
-import FormInput from "../../../../shared/ui/FormInput/FormInput";
+} from "@/entities/user/model/schemas";
+import { setAccessToken } from "@/shared/lib/axiosInstance";
+import FormInput from "@/shared/ui/FormInput/FormInput";
 import "./SignUpForm.css";
+import { useRef } from "react";
 
 export default function SignUpForm() {
   const dispatch = useAppDispatch();
