@@ -1,0 +1,183 @@
+.profilePage {
+  display: grid;
+  gap: 24px;
+  padding: 36px 0 56px;
+}
+
+.heroCard {
+  padding: 32px;
+  border: 1px solid rgba(146, 118, 85, 0.18);
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at top left, rgba(214, 182, 142, 0.34), transparent 38%),
+    linear-gradient(135deg, rgba(255, 250, 243, 0.98), rgba(247, 239, 228, 0.92));
+  box-shadow: 0 22px 60px rgba(94, 71, 44, 0.12);
+}
+
+.kicker {
+  margin: 0 0 10px;
+  color: #8b6b43;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(36px, 5vw, 56px);
+  line-height: 0.95;
+  color: #201d19;
+}
+
+.subtitle {
+  margin: 14px 0 0;
+  color: #5e564d;
+  font-size: 17px;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background-color: rgba(125, 95, 59, 0.12);
+  color: #6d5230;
+  font-weight: 700;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.card {
+  padding: 28px;
+  border: 1px solid rgba(146, 118, 85, 0.16);
+  border-radius: 28px;
+  background-color: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 20px 55px rgba(80, 61, 42, 0.08);
+}
+
+.cardTitle {
+  margin: 0 0 18px;
+  font-size: 22px;
+  color: #201d19;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.formField {
+  width: 100%;
+}
+
+.formError {
+  margin: 8px 4px 0;
+  color: #b24545;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.selectWrapper {
+  position: relative;
+}
+
+.select {
+  width: 100%;
+  appearance: none;
+  cursor: pointer;
+}
+
+.selectLabel {
+  background: transparent;
+}
+
+.primaryButton,
+.secondaryButton,
+.dangerButton {
+  min-height: 52px;
+  border: 0;
+  border-radius: 16px;
+  padding: 0 18px;
+  font-weight: 700;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, #8b6440, #6c4f31);
+  color: #fffdf9;
+  box-shadow: 0 16px 30px rgba(108, 79, 49, 0.24);
+}
+
+.secondaryButton {
+  background-color: rgba(125, 95, 59, 0.12);
+  color: #6d5230;
+}
+
+.dangerButton {
+  background: linear-gradient(135deg, #b24545, #8f3131);
+  color: #fff7f7;
+  box-shadow: 0 16px 30px rgba(143, 49, 49, 0.2);
+}
+
+.primaryButton:hover,
+.secondaryButton:hover,
+.dangerButton:hover {
+  transform: translateY(-1px);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.dangerButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.message {
+  margin: 18px 0 0;
+  color: #5d554c;
+}
+
+@media (max-width: 860px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .profilePage {
+    padding: 24px 0 40px;
+  }
+
+  .heroCard,
+  .card {
+    padding: 22px;
+    border-radius: 24px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+}
