@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { selectUser } from "@/entities/user/model/selectors";
 import { clearUser } from "@/entities/user/model/userSlice";
@@ -10,7 +10,6 @@ import { setAccessToken } from "@/shared/lib/axiosInstance";
 import "./Header.css";
 
 export default function Header() {
-  const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
@@ -21,48 +20,35 @@ export default function Header() {
     if (statusCode === 200) {
       dispatch(clearUser());
       setAccessToken("");
-      router.push("/auth?mode=signup");
+      router.push("/auth");
     }
   }
 
-  function getNavLinkClassName(href: string, accent = false) {
-    let className = "navlink";
-
-    if (accent) {
-      className += " navlink-accent";
-    }
-
-    if (pathname === href) {
-      className += " active";
-    }
-
-    return className;
-  }
 
   return (
     <header className="site-header">
       <div className="app-container header-content">
         <nav className="header-nav">
-          <Link href="/" className={getNavLinkClassName("/")}>
+          <Link href="/" className="navlink">
             Главная
           </Link>
 
           {user ? (
             <>
-              <Link href="/profile" className={getNavLinkClassName("/profile")}>
+              <Link href="/profile" className="navlink">
                 Профиль
               </Link>
               <span className="user-badge">{user.name}</span>
               <button
                 type="button"
-                className={getNavLinkClassName("/auth", true)}
+                className="navlink"
                 onClick={handleLogout}
               >
                 Выход
               </button>
             </>
           ) : (
-            <Link href="/auth" className={getNavLinkClassName("/auth", true)}>
+            <Link href="/auth" className="navlink">
               Войти
             </Link>
           )}
