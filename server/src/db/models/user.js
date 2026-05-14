@@ -1,16 +1,14 @@
 "use strict";
 const { Model } = require("sequelize");
+
+const USER_ROLES = ["candidate", "intervier"];
+
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
-      this.hasMany(models.Request, { foreignKey: "user_id", as: "requests" });
+      this.hasMany(models.Session, { foreignKey: "user_id", as: "sessions" });
     }
-    
+
     static validateEmail(email) {
       const emailPattern = /^[A-z0-9!-_%.]+@[A-z0-9.-]+\.[A-z]{2,}$/;
       return emailPattern.test(email);
@@ -20,30 +18,27 @@ module.exports = (sequelize, DataTypes) => {
       const hasUpperCase = /[A-Z]/;
       const hasLowerCase = /[a-z]/;
       const hasDigits = /\d/;
-      const hasSpecialSymbols = /[!@#$%^&*()-+,.""<>{}]/;
+      const hasSpecialSymbols = /[!@#$%^&*()-+,.\""<>{}]/;
       const isValidLength = password.length >= 8;
 
-      if (
-        !hasUpperCase.test(password) ||
-        !hasLowerCase.test(password) ||
-        !hasDigits.test(password) ||
-        !hasSpecialSymbols.test(password) ||
-        !isValidLength
-      ) {
-        return false;
-      }
-      return true;
+      return (
+        hasUpperCase.test(password) &&
+        hasLowerCase.test(password) &&
+        hasDigits.test(password) &&
+        hasSpecialSymbols.test(password) &&
+        isValidLength
+      );
     }
 
     static validateRegistrationData(userData) {
-      const { name, email, password, level } = userData;
+      const { name, email, password, role } = userData;
 
       if (!name || typeof name !== "string" || name.trim().length === 0) {
         return { isValid: false, error: "Некорректное имя пользователя" };
       }
 
-      if (!level || !["student", "junior", "middle", "senior"].includes(level)) {
-        return { isValid: false, error: "Некорректный уровень пользователя" };
+      if (!role || !USER_ROLES.includes(role)) {
+        return { isValid: false, error: "Некорректная роль пользователя" };
       }
 
       if (
@@ -103,12 +98,13 @@ module.exports = (sequelize, DataTypes) => {
       return { isValid: true, error: null };
     }
   }
+
   User.init(
     {
       name: DataTypes.TEXT,
       email: DataTypes.TEXT,
       password: DataTypes.TEXT,
-      level: DataTypes.ENUM("student", "junior", "middle", "senior"),
+      role: DataTypes.ENUM(...USER_ROLES),
     },
     {
       sequelize,
@@ -120,5 +116,6 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
   );
+
   return User;
 };

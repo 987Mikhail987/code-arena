@@ -2,11 +2,8 @@ const { User } = require("../db/models");
 
 class ProfileService {
   static async getOneProfile(userId) {
-    const user = (await User.findByPk(userId))?.get();
-    if (!user) {
-      return null;
-    }
-    return user;
+    const user = await User.findByPk(userId);
+    return user ? user.get() : null;
   }
 
   static async updatePassword(userId, newPassword) {
@@ -14,6 +11,7 @@ class ProfileService {
     if (!user) {
       return null;
     }
+
     user.password = newPassword;
     await user.save();
     return user;
@@ -24,16 +22,18 @@ class ProfileService {
     if (!user) {
       return null;
     }
-    const { email, level, name } = updateProfile;
+
+    const { email, role, name } = updateProfile;
     if (email) {
-      user.email = email.toLowerCase().trim(); // Нормализуем email?
+      user.email = email.toLowerCase().trim();
     }
-    if (level) {
-      user.level = level;
+    if (role) {
+      user.role = role;
     }
     if (name) {
       user.name = name;
     }
+
     await user.save();
     return user;
   }
@@ -43,6 +43,7 @@ class ProfileService {
     if (!user) {
       return null;
     }
+
     await user.destroy();
     return true;
   }

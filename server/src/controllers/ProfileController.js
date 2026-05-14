@@ -1,6 +1,6 @@
-const ProfileService = require("../services/ProfileService");
-const { User } = require("../db/models");
 const bcrypt = require("bcrypt");
+const { User } = require("../db/models");
+const ProfileService = require("../services/ProfileService");
 const formatResponse = require("../utils/formatResponse");
 
 class ProfileController {
@@ -11,6 +11,7 @@ class ProfileController {
         .status(400)
         .json(formatResponse(400, "Неверный формат ID пользователя"));
     }
+
     try {
       const profile = await ProfileService.getOneProfile(user.id);
       if (!profile) {
@@ -19,7 +20,7 @@ class ProfileController {
           .json(formatResponse(404, "Профиль пользователя не найден"));
       }
 
-      delete profile.password; // Удаляем пароль из ответа
+      delete profile.password;
       return res
         .status(200)
         .json(formatResponse(200, "Профиль пользователя получен", profile));
@@ -46,7 +47,7 @@ class ProfileController {
     if (!isValid) {
       return res
         .status(400)
-        .json(formatResponse(400, "Пароль не соответствует требованиям", null));
+        .json(formatResponse(400, "Пароль не соответствует требованиям"));
     }
 
     try {
@@ -99,6 +100,7 @@ class ProfileController {
           .status(404)
           .json(formatResponse(404, "Профиль пользователя не найден"));
       }
+
       return res
         .status(200)
         .json(
@@ -113,9 +115,7 @@ class ProfileController {
       console.log(error);
       return res
         .status(500)
-        .json(
-          formatResponse(500, "Ошибка при обновлении профиля пользователя"),
-        );
+        .json(formatResponse(500, "Ошибка при обновлении профиля пользователя"));
     }
   }
 
@@ -126,6 +126,7 @@ class ProfileController {
         .status(400)
         .json(formatResponse(400, "Неверный формат ID пользователя"));
     }
+
     try {
       const isDeleted = await ProfileService.deleteProfile(user.id);
       if (!isDeleted) {
@@ -133,8 +134,10 @@ class ProfileController {
           .status(404)
           .json(formatResponse(404, "Профиль пользователя не найден"));
       }
+
       return res
         .status(200)
+        .clearCookie("refreshToken")
         .json(formatResponse(200, "Профиль пользователя успешно удален"));
     } catch (error) {
       console.log("======== ProfileController.deleteProfile =========");

@@ -1,30 +1,26 @@
-const AuthService = require('../services/AuthService');
-const formatResponse = require('../utils/formatResponse');
-const { User } = require('../db/models');
-const bcrypt = require('bcrypt');
-const generateTokens = require('../utils/generateTokens');
-const cookieConfig = require('../config/cookieConfig');
+const bcrypt = require("bcrypt");
+const cookieConfig = require("../config/cookieConfig");
+const { User } = require("../db/models");
+const AuthService = require("../services/AuthService");
+const formatResponse = require("../utils/formatResponse");
+const generateTokens = require("../utils/generateTokens");
 
 class AuthController {
   static async register(req, res) {
-
-    const { name, email, password, level } = req.body;
-
-    // Проводим валидацию данных для регистрации
+    const { name, email, password, role } = req.body;
     const { isValid, error } = User.validateRegistrationData({
       name,
       email,
       password,
-      level,
+      role,
     });
 
     if (!isValid) {
       return res
         .status(400)
-        .json(formatResponse(400, 'Ошибка валидации', null, error));
+        .json(formatResponse(400, "Ошибка валидации", null, error));
     }
 
-    // Нормализуем email для поиска существующего пользователя
     const normalizedEmail = email.toLowerCase().trim();
 
     try {
@@ -33,55 +29,47 @@ class AuthController {
       if (existingUser) {
         return res
           .status(400)
-          .json(formatResponse(400, 'Пользователь уже зарегистрирован'));
+          .json(formatResponse(400, "Пользователь уже зарегистрирован"));
       }
-      // Хэшируем пароль
-      const hashedPassword = await bcrypt.hash(password, 10);
 
-      // создаём нового пользователя
+      const hashedPassword = await bcrypt.hash(password, 10);
       const newUser = await AuthService.createUser({
         name,
         email,
         password: hashedPassword,
-        level,
+        role,
       });
 
       if (!newUser) {
         return res
           .status(500)
-          .json(formatResponse(500, 'Ошибка при создании пользователя'));
+          .json(formatResponse(500, "Ошибка при создании пользователя"));
       }
-      // удаляем информацию о пароле перед ответом от сервера
+
       delete newUser.password;
 
-      // генерируем токены
       const { accessToken, refreshToken } = generateTokens({ user: newUser });
-      // формируем ответ
+
       return res
         .status(201)
-        .cookie('refreshToken', refreshToken, cookieConfig)
+        .cookie("refreshToken", refreshToken, cookieConfig)
         .json(
-          formatResponse(201, 'Регистрация успешна', {
+          formatResponse(201, "Регистрация успешна", {
             user: newUser,
             accessToken,
           }),
         );
-    } catch (error) {
-      console.log('======== AuthController.register =========');
-      console.log(error);
+    } catch (registerError) {
+      console.log("======== AuthController.register =========");
+      console.log(registerError);
       return res
         .status(500)
-        .json(
-          formatResponse(500, 'Ошибка сервера при регистрации пользователя'),
-        );
+        .json(formatResponse(500, "Ошибка сервера при регистрации пользователя"));
     }
   }
 
   static async login(req, res) {
-    // Достаём данные для регистрации из тела запроса
     const { email, password } = req.body;
-
-    // Проводим валидацию данных для регистрации
     const { isValid, error } = User.validateLoginData({
       email,
       password,
@@ -90,10 +78,9 @@ class AuthController {
     if (!isValid) {
       return res
         .status(400)
-        .json(formatResponse(400, 'Ошибка валидации', null, error));
+        .json(formatResponse(400, "Ошибка валидации", null, error));
     }
 
-    // Нормализуем email для поиска существующего пользователя
     const normalizedEmail = email.toLowerCase().trim();
 
     try {
@@ -105,11 +92,11 @@ class AuthController {
           .json(
             formatResponse(
               404,
-              'Пользователь с таким адресом не зарегистрирован',
+              "Пользователь с таким адресом не зарегистрирован",
             ),
           );
       }
-      // Сравниваем хэши паролей
+
       const isValidPassword = await bcrypt.compare(
         password,
         existingUser.password,
@@ -118,79 +105,69 @@ class AuthController {
       if (!isValidPassword) {
         return res
           .status(400)
-          .json(formatResponse(400, 'Неверные данные для входа'));
+          .json(formatResponse(400, "Неверные данные для входа"));
       }
 
-      // удаляем информацию о пароле перед ответом от сервера
       delete existingUser.password;
 
-      // генерируем токены
       const { accessToken, refreshToken } = generateTokens({
         user: existingUser,
       });
 
-      // формируем ответ
       return res
         .status(200)
-        .cookie('refreshToken', refreshToken, cookieConfig)
+        .cookie("refreshToken", refreshToken, cookieConfig)
         .json(
-          formatResponse(200, 'Успешный вход в приложение', {
+          formatResponse(200, "Успешный вход в приложение", {
             user: existingUser,
             accessToken,
           }),
         );
-    } catch (error) {
-      console.log('======== AuthController.login =========');
-      console.log(error);
+    } catch (loginError) {
+      console.log("======== AuthController.login =========");
+      console.log(loginError);
       return res
         .status(500)
-        .json(formatResponse(500, 'Ошибка сервера при входе в приложение'));
+        .json(formatResponse(500, "Ошибка сервера при входе в приложение"));
     }
   }
 
   static async logout(req, res) {
     try {
-      // формируем ответ
       return res
         .status(200)
-        .clearCookie('refreshToken')
-        .json(formatResponse(200, 'Успешный выход '));
-    } catch (error) {
-      console.log('======== AuthController.logout =========');
-      console.log(error);
+        .clearCookie("refreshToken")
+        .json(formatResponse(200, "Успешный выход"));
+    } catch (logoutError) {
+      console.log("======== AuthController.logout =========");
+      console.log(logoutError);
       return res
         .status(500)
-        .json(formatResponse(500, 'Ошибка сервера при выходе из приложения'));
+        .json(formatResponse(500, "Ошибка сервера при выходе из приложения"));
     }
   }
 
   static async refreshTokens(req, res) {
-    // Достаём данные о пользователе из res.locals (их туда положила мидлварка verifyRefreshToken)
-
     const { user } = res.locals;
 
     try {
-      // генерируем токены
-      const { accessToken, refreshToken } = generateTokens({
-        user,
-      });
+      const { accessToken, refreshToken } = generateTokens({ user });
 
-      // формируем ответ
       return res
         .status(200)
-        .cookie('refreshToken', refreshToken, cookieConfig)
+        .cookie("refreshToken", refreshToken, cookieConfig)
         .json(
-          formatResponse(200, 'Пользовательская сессия продлена', {
+          formatResponse(200, "Пользовательская сессия продлена", {
             user,
             accessToken,
           }),
         );
-    } catch (error) {
-      console.log('======== AuthController.refreshTokens =========');
-      console.log(error);
+    } catch (refreshError) {
+      console.log("======== AuthController.refreshTokens =========");
+      console.log(refreshError);
       return res
         .status(500)
-        .json(formatResponse(500, 'Ошибка сервера при продлении сессии'));
+        .json(formatResponse(500, "Ошибка сервера при продлении сессии"));
     }
   }
 }
