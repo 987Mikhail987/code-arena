@@ -1,75 +1,54 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import type { Dispatch, SetStateAction } from "react";
-import type { User } from "@/entities/user/model/types";
+import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
+import { selectUser } from "@/entities/user/model/selectors";
+import { clearUser } from "@/entities/user/model/userSlice";
+import UserApi from "@/entities/user/api/UserApi";
+import { setAccessToken } from "@/shared/lib/axiosInstance";
 import "./Header.css";
-import UserApi from "../../entities/user/api/UserApi";
-import { setAccessToken } from "../../shared/lib/axiosInstance";
 
-type HeaderProps = {
-  user: User | null;
-  setUser: Dispatch<SetStateAction<User | null>>;
-};
-
-export default function Header({ user, setUser }: HeaderProps) {
-  const pathname = usePathname();
+export default function Header() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(selectUser);
 
   async function handleLogout() {
     const { statusCode } = await UserApi.logout();
 
     if (statusCode === 200) {
-      setUser(null);
+      dispatch(clearUser());
       setAccessToken("");
-      router.push("/auth?mode=signup");
+      router.push("/auth");
     }
   }
 
-  function getNavLinkClassName(href: string, accent = false) {
-    let className = "navlink";
-
-    if (accent) {
-      className += " navlink-accent";
-    }
-
-    if (pathname === href) {
-      className += " active";
-    }
-
-    return className;
-  }
 
   return (
     <header className="site-header">
       <div className="app-container header-content">
-
         <nav className="header-nav">
-          <Link href="/" className={getNavLinkClassName("/")}>
+          <Link href="/" className="navlink">
             Главная
-          </Link>
-
-          <Link href="/game" className={getNavLinkClassName("/game")}>
-            Игра
           </Link>
 
           {user ? (
             <>
-              <Link href="/profile" className={getNavLinkClassName("/profile")}>
+              <Link href="/profile" className="navlink">
                 Профиль
               </Link>
               <span className="user-badge">{user.name}</span>
               <button
                 type="button"
-                className={getNavLinkClassName("/auth", true)}
+                className="navlink"
                 onClick={handleLogout}
               >
                 Выход
               </button>
             </>
           ) : (
-            <Link href="/auth" className={getNavLinkClassName("/auth", true)}>
+            <Link href="/auth" className="navlink">
               Войти
             </Link>
           )}

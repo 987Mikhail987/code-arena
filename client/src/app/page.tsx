@@ -1,7 +1,3 @@
-import React from 'react'
-
-export default function page() {
-  return (
-    <div>page</div>
-  )
+export default function HomePage() {
+  return <div className="app-container">page</div>;
 }

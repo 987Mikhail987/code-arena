@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import type { User } from "@/entities/user/model/types";
-import UserApi from "@/entities/user/api/UserApi";
-import { setAccessToken } from "@/shared/lib/axiosInstance";
+import { useEffect, type ReactNode } from "react";
+import { useAppDispatch } from "./store/hooks";
+import { reloadUser } from "@/entities/user/model/userSlice";
 import Header from "@/widgets/Header/Header";
 import "./AppShell.css";
 
@@ -12,33 +11,18 @@ type AppShellProps = {
 };
 
 export default function AppShell({ children }: AppShellProps) {
-  const [user, setUser] = useState<User | null>(null);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    async function loadUser() {
-      try {
-        const response = await UserApi.refresh();
-
-        if (response?.statusCode === 200) {
-          setAccessToken(response.data.accessToken);
-          setUser(response.data.user);
-        }
-      } catch {
-        setAccessToken("");
-      }
-    }
-
-    void loadUser();
-  }, []);
+    void dispatch(reloadUser());
+  }, [dispatch]);
 
   return (
     <div className="app-shell">
-      <Header user={user} setUser={setUser} />
+      <Header />
       <main className="layout-content">{children}</main>
       <footer className="app-footer">
-        <div className="app-container footer-content">
-     
-        </div>
+        <div className="app-container footer-content"></div>
       </footer>
     </div>
   );

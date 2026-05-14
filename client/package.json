@@ -9,10 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@reduxjs/toolkit": "^2.9.1",
     "axios": "^1.15.2",
     "next": "16.2.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.75.0",
+    "react-redux": "^9.2.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^20",
