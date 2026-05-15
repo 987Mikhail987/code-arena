@@ -1,6 +1,6 @@
 import React from "react";
 
-type InterviewType = "ai" | "human";
+type InterviewType = "ai" | "live";
 type ChooseInterviewPropsType = {
   onSelect: (type: InterviewType) => void;
 };
@@ -18,7 +18,7 @@ export default function ChooseInterview({
         <h2>AI Интервью</h2>
         <p>Пройдите собеседование с искусственным интеллектом</p>
       </button>
-      <button key="human" onClick={handleHumanInterview}>
+      <button key="live" onClick={handleHumanInterview}>
         <h2>Живое интервью</h2>
         <p>Реальное собеседование</p>
       </button>

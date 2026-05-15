@@ -1,6 +1,6 @@
 export type SessionStatusType = "active" | "finished";
 export type DifficultyType = "junior" | "middle" | "senior";
-export type InterviewType = "ai" | "human";
+export type InterviewType = "ai" | "live";
 
 export type SessionType = {
   id: string;
@@ -22,7 +22,7 @@ export type MessageType = {
 
 export type CreateSessionParamsType = {
   type: InterviewType;
-  difficulty: DifficultyType;
+  level: DifficultyType;
   topic?: string;
 };
 
