@@ -1,9 +1,9 @@
-"use client";
-// import { useRouter } from "next/router";
+
+import { useRouter } from "next/navigation";
 import React from "react";
 
 export default function ChooseInterviewPage() {
-  //   const router = useRouter();
+    const router = useRouter();
 
   const handleHumanInterview = () => {
     alert("Скоро будет доступно!");
@@ -13,7 +13,7 @@ export default function ChooseInterviewPage() {
     <div>
       <button
         key="ai"
-        // onClick={() => router.push("/interview/ai")}
+        onClick={() => router.push("/interview-session")}
       >
         <h2>Начать интервью</h2>
         <p>Пройдите собеседование как кандидат</p>
