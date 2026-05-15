@@ -34,16 +34,15 @@ export default function Header() {
 
           {user ? (
             <>
+              <Link href="/dashboard" className="navlink">
+                Интервью
+              </Link>
               <Link href="/profile" className="navlink">
                 Профиль
               </Link>
               <span className="user-badge">{user.name}</span>
-              <button
-                type="button"
-                className="navlink"
-                onClick={handleLogout}
-              >
-                Выйти
+              <button type="button" className="navlink" onClick={handleLogout}>
+                Выход
               </button>
             </>
           ) : (
