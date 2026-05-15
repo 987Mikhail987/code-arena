@@ -24,7 +24,6 @@ export default function Header() {
     }
   }
 
-
   return (
     <header className="site-header">
       <div className="app-container header-content">
@@ -44,7 +43,7 @@ export default function Header() {
                 className="navlink"
                 onClick={handleLogout}
               >
-                Выход
+                Выйти
               </button>
             </>
           ) : (
