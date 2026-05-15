@@ -2,7 +2,7 @@
 import UserGuard from "@/shared/hocs/UserGuard/UserGuard";
 import ChooseInterview from "@/widgets/ChooseInterview/ui/ChooseInterview";
 import { InterviewSetup } from "@/widgets/InterviewSetup/InterviewSetup";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 type InterviewType = "ai" | "human";

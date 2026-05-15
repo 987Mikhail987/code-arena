@@ -32,7 +32,7 @@ export function InterviewSetup({
   const handleStart = async () => {
     setIsLoading(true);
     try {
-      console.log("Создание комнаты" + `${onStart("1")}`);
+      console.log("Создание комнаты 1" + `${onStart("1")}`);
     } catch (error) {
       console.error("Ошибка создания интервью:", error);
     } finally {
@@ -100,11 +100,3 @@ export function InterviewSetup({
     </div>
   );
 }
-
-// export default function InterviewSessionPageGuard() {
-//   return (
-//     <UserGuard mode="authenticated" redirectTo="/auth">
-//       <InterviewSessionPage />
-//     </UserGuard>
-//   );
-// }
