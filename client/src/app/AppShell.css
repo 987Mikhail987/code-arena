@@ -1,10 +1,10 @@
 .layout-content {
-  padding: 24px 0 96px;
+  padding: 100px 0 96px;
 }
 
 .app-footer {
-  border-top: 1px solid rgba(146, 118, 85, 0.18);
-  background-color: rgba(255, 252, 246, 0.92);
+  border-top: 1px solid var(--border);
+  background-color: rgba(13, 17, 23, 0.72);
   backdrop-filter: blur(12px);
 }
 
@@ -12,14 +12,22 @@
   min-height: 72px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 16px;
-  color: #6b5f4b;
+  color: var(--foreground-muted);
   font-size: 14px;
+  text-align: center;
+}
+
+.footer-content p {
+  max-width: 720px;
+  margin: 0;
+  line-height: 1.6;
 }
 
 @media (max-width: 720px) {
   .layout-content {
+    padding-top: 128px;
     padding-bottom: 56px;
   }
 

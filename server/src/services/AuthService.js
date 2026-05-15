@@ -5,6 +5,10 @@ class AuthService {
     return (await User.findOne({ where: { email } }))?.get();
   }
 
+  static async findUserById(userId) {
+    return (await User.findByPk(userId))?.get();
+  }
+
   static async createUser(userData) {
     return (await User.create(userData)).get();
   }

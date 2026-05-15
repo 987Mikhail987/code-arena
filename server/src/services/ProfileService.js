@@ -35,7 +35,7 @@ class ProfileService {
     }
 
     await user.save();
-    return user;
+    return user.get();
   }
 
   static async deleteProfile(userId) {
