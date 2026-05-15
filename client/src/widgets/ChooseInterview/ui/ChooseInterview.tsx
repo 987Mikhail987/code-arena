@@ -1,26 +1,26 @@
-
-import { useRouter } from "next/navigation";
 import React from "react";
 
-export default function ChooseInterviewPage() {
-    const router = useRouter();
+type InterviewType = "ai" | "human";
+type ChooseInterviewPropsType = {
+  onSelect: (type: InterviewType) => void;
+};
 
+export default function ChooseInterview({
+  onSelect,
+}: ChooseInterviewPropsType) {
   const handleHumanInterview = () => {
-    alert("Скоро будет доступно!");
+    alert("Сейчас в разработке, НОО, очень скоро будет доступно!");
   };
 
   return (
     <div>
-      <button
-        key="ai"
-        onClick={() => router.push("/interview-session")}
-      >
-        <h2>Начать интервью</h2>
-        <p>Пройдите собеседование как кандидат</p>
+      <button key="ai" onClick={() => onSelect("ai")}>
+        <h2>AI Интервью</h2>
+        <p>Пройдите собеседование с искусственным интеллектом</p>
       </button>
       <button key="human" onClick={handleHumanInterview}>
-        <h2>Начать интервью</h2>
-        <p>Проведите собеседование как интервьюер</p>
+        <h2>Живое интервью</h2>
+        <p>Реальное собеседование</p>
       </button>
     </div>
   );
