@@ -1,4 +1,5 @@
 "use client";
+import SessionApi from "@/entities/session/api/sessionApi";
 import { useState } from "react";
 
 type InterviewType = "ai" | "human";
@@ -32,7 +33,13 @@ export function InterviewSetup({
   const handleStart = async () => {
     setIsLoading(true);
     try {
-      console.log("Создание комнаты 1" + `${onStart("1")}`);
+      const interview = await SessionApi.createSession({
+        type: interviewType,
+        difficulty,
+        topic: topic || undefined,
+      });
+      console.log("Полный ответ от API:", interview);
+      onStart(interview.data.id);
     } catch (error) {
       console.error("Ошибка создания интервью:", error);
     } finally {
