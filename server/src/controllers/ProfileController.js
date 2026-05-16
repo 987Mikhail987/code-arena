@@ -101,6 +101,8 @@ class ProfileController {
           .json(formatResponse(404, "Профиль пользователя не найден"));
       }
 
+      delete updatedProfile.password;
+
       return res
         .status(200)
         .json(

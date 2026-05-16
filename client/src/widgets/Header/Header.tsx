@@ -7,7 +7,7 @@ import { selectUser } from "@/entities/user/model/selectors";
 import { clearUser } from "@/entities/user/model/userSlice";
 import UserApi from "@/entities/user/api/UserApi";
 import { setAccessToken } from "@/shared/lib/axiosInstance";
-import "./Header.css";
+import styles from "./Header.module.css";
 
 export default function Header() {
   const router = useRouter();
@@ -24,35 +24,44 @@ export default function Header() {
     }
   }
 
-
   return (
-    <header className="site-header">
-      <div className="app-container header-content">
-        <nav className="header-nav">
-          <Link href="/" className="navlink">
+    <header className={styles.siteHeader}>
+      <div className={`app-container ${styles.headerContent}`}>
+        <nav className={styles.headerNav}>
+          <Link href="/" className={styles.navLink}>
             Главная
           </Link>
 
           {user ? (
             <>
-              <Link href="/profile" className="navlink">
+              <Link href="/dashboard" className={styles.navLink}>
+                Интервью
+              </Link>
+              <Link href="/profile" className={styles.navLink}>
                 Профиль
               </Link>
-              <span className="user-badge">{user.name}</span>
-              <button
-                type="button"
-                className="navlink"
-                onClick={handleLogout}
-              >
-                Выход
-              </button>
             </>
           ) : (
-            <Link href="/auth" className="navlink">
+            <Link href="/auth" className={styles.navLink}>
               Войти
             </Link>
           )}
         </nav>
+
+        {user ? (
+          <div className={styles.userActions}>
+            <span className={styles.userBadge}>{user.name}</span>
+            <button
+              type="button"
+              className={styles.logoutButton}
+              onClick={handleLogout}
+              aria-label="Выйти из аккаунта"
+              title="Выйти"
+            >
+              <span className={styles.logoutIcon} aria-hidden="true" />
+            </button>
+          </div>
+        ) : null}
       </div>
     </header>
   );

@@ -22,7 +22,11 @@ export default function AppShell({ children }: AppShellProps) {
       <Header />
       <main className="layout-content">{children}</main>
       <footer className="app-footer">
-        <div className="app-container footer-content"></div>
+        <div className="app-container footer-content">
+          <p>
+            Не обращайте внимания, это просто подвал, в котором цыгане держат детей и инвалидов.
+          </p>
+        </div>
       </footer>
     </div>
   );
