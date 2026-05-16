@@ -8,8 +8,8 @@
   gap: 16px;
   padding: 28px;
   border: 1px solid var(--border);
-  border-radius: 22px;
-  background-color: rgba(22, 27, 34, 0.82);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--surface) 88%, transparent);
   box-shadow: var(--shadow);
 }
 
@@ -25,6 +25,7 @@
 .field {
   display: grid;
   gap: 8px;
+  position: relative;
 }
 
 .field label {
@@ -35,18 +36,38 @@
 .field select,
 .field input {
   min-height: 48px;
-  padding: 0 14px;
+  padding: 0 44px 0 14px;
   border: 1px solid var(--border);
-  border-radius: 14px;
-  background-color: rgba(15, 23, 42, 0.76);
+  border-radius: 8px;
+  background-color: var(--control-bg);
   color: var(--foreground);
   outline: none;
 }
 
+.field select {
+  appearance: none;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+    linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+  background-position:
+    calc(100% - 22px) 21px,
+    calc(100% - 16px) 21px;
+  background-size:
+    6px 6px,
+    6px 6px;
+  background-repeat: no-repeat;
+}
+
+.field select option {
+  background-color: var(--surface);
+  color: var(--foreground);
+}
+
 .field select:focus,
 .field input:focus {
-  border-color: rgba(56, 189, 248, 0.72);
-  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12);
+  border-color: color-mix(in srgb, var(--accent) 72%, transparent);
+  box-shadow: 0 0 0 4px var(--accent-muted);
 }
 
 .backButton,
@@ -55,7 +76,7 @@
   width: fit-content;
   padding: 0 18px;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 8px;
   font-weight: 700;
   transition:
     transform 0.2s ease,
@@ -63,14 +84,14 @@
 }
 
 .backButton {
-  background-color: rgba(148, 163, 184, 0.08);
+  background-color: color-mix(in srgb, var(--foreground-muted) 8%, transparent);
   color: var(--foreground);
 }
 
 .startButton {
   border: 0;
-  background-color: var(--accent);
-  color: #061018;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff7f4;
 }
 
 .backButton:hover,

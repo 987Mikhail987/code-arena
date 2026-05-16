@@ -12,12 +12,6 @@ class SessionController {
     const { content, level, type = "ai" } = req.body;
     const topic = req.body.topic ?? content;
 
-    if (user.role !== "candidate") {
-      return res
-        .status(403)
-        .json(formatResponse(403, "Тренажер доступен только кандидату"));
-    }
-
     if (!topic || typeof topic !== "string" || topic.trim().length === 0) {
       return res
         .status(400)
@@ -176,6 +170,12 @@ class SessionController {
         return res
           .status(404)
           .json(formatResponse(404, "Тренировочная сессия не найдена"));
+      }
+
+      if (message.isComplited) {
+        return res
+          .status(409)
+          .json(formatResponse(409, "Тренировочная сессия уже завершена"));
       }
 
       return res

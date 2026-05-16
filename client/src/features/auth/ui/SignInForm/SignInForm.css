@@ -15,7 +15,7 @@
   letter-spacing: 0.1rem;
   font-weight: 600;
   border: none;
-  border-radius: 14px;
+  border-radius: 8px;
   transition:
     background-color 0.2s ease,
     transform 0.2s ease;
@@ -26,13 +26,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: var(--accent);
-  color: #061018;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff7f4;
 }
 
 .form-action-button:hover {
   transform: translateY(-1px);
-  background-color: #7dd3fc;
 }
 
 .form-helper-text {

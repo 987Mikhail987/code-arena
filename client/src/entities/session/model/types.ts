@@ -1,4 +1,4 @@
-export type SessionStatusType = "active" | "finished";
+export type SessionStatusType = "active" | "complited";
 export type DifficultyType = "junior" | "middle" | "senior";
 export type InterviewType = "ai" | "live";
 

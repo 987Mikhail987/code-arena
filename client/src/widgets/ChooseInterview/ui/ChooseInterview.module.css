@@ -8,8 +8,10 @@
   min-height: 180px;
   padding: 26px;
   border: 1px solid var(--border);
-  border-radius: 22px;
-  background-color: rgba(22, 27, 34, 0.82);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 52%),
+    color-mix(in srgb, var(--surface) 88%, transparent);
   color: var(--foreground);
   text-align: left;
   box-shadow: var(--shadow);
@@ -21,8 +23,8 @@
 
 .choiceCard:hover {
   transform: translateY(-2px);
-  border-color: rgba(56, 189, 248, 0.44);
-  background-color: rgba(30, 41, 59, 0.86);
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+  background-color: var(--surface-strong);
 }
 
 .choiceCard h2 {

@@ -1,9 +1,68 @@
 .editorShell {
   min-height: 520px;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 14px;
   padding: 16px;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 22px;
-  background-color: rgba(22, 27, 34, 0.86);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--surface) 90%, transparent);
   box-shadow: var(--shadow);
+}
+
+.editorPanel {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.terminal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 46%),
+    var(--control-bg);
+}
+
+.terminal h3,
+.terminal p {
+  margin: 0;
+}
+
+.terminal h3 {
+  font-size: 15px;
+}
+
+.terminal p {
+  margin-top: 4px;
+  color: var(--foreground-muted);
+  font-size: 13px;
+}
+
+.terminal button {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff7f4;
+  font-weight: 800;
+  transition: transform 0.2s ease;
+}
+
+.terminal button:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 560px) {
+  .terminal {
+    align-items: stretch;
+    flex-direction: column;
+  }
 }

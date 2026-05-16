@@ -1,14 +1,20 @@
 .roomPage {
   display: grid;
   gap: 20px;
-  padding: 28px 0 56px;
+  padding: 28px 0 0;
 }
 
 .heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
   padding: 24px;
   border: 1px solid var(--border);
-  border-radius: 22px;
-  background-color: rgba(22, 27, 34, 0.82);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 46%),
+    color-mix(in srgb, var(--surface) 88%, transparent);
   box-shadow: var(--shadow);
 }
 
@@ -25,6 +31,38 @@
   margin: 0;
 }
 
+.finishButton {
+  min-height: 46px;
+  padding: 0 18px;
+  border: 1px solid color-mix(in srgb, var(--accent) 48%, transparent);
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff7f4;
+  font-weight: 800;
+  white-space: nowrap;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.finishButton:hover {
+  transform: translateY(-1px);
+}
+
+.finishButton:disabled {
+  opacity: 0.72;
+  transform: none;
+}
+
+.error {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--danger) 36%, transparent);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(280px, 0.95fr) minmax(360px, 1.25fr);
@@ -33,6 +71,11 @@
 }
 
 @media (max-width: 920px) {
+  .heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .workspace {
     grid-template-columns: 1fr;
   }

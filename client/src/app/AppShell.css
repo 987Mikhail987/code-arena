@@ -1,15 +1,16 @@
 .layout-content {
-  padding: 100px 0 96px;
+  flex: 1;
+  padding: 100px 0 24px;
 }
 
 .app-footer {
   border-top: 1px solid var(--border);
-  background-color: rgba(13, 17, 23, 0.72);
+  background-color: color-mix(in srgb, var(--surface) 76%, transparent);
   backdrop-filter: blur(12px);
 }
 
 .footer-content {
-  min-height: 72px;
+  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -28,7 +29,7 @@
 @media (max-width: 720px) {
   .layout-content {
     padding-top: 128px;
-    padding-bottom: 56px;
+    padding-bottom: 24px;
   }
 
   .footer-content {
