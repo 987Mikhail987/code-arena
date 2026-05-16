@@ -1,6 +1,6 @@
 import React from "react";
+import type { InterviewType } from "@/entities/session/model/types";
 
-type InterviewType = "ai" | "live";
 type ChooseInterviewPropsType = {
   onSelect: (type: InterviewType) => void;
 };

@@ -15,18 +15,6 @@ type ApiResponse<T> = {
 };
 
 export default class SessionApi {
-  static async getUserSessions(): Promise<ApiResponse<SessionType[]>> {
-    try {
-      const response = await axiosInstance.get("/sessions");
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        return error.response.data;
-      }
-      throw error;
-    }
-  }
-
   static async createSession(
     params: CreateSessionParamsType,
   ): Promise<ApiResponse<SessionType>> {
@@ -34,6 +22,18 @@ export default class SessionApi {
       const response = await axiosInstance.post("/sessions", params);
       return response.data;
     } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response) {
+        return error.response.data;
+      }
+      throw error;
+    }
+  }
+
+  static async getUserSessions(): Promise<ApiResponse<SessionType[]>> {
+    try {
+      const response = await axiosInstance.get("/sessions");
+      return response.data;
+    } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         return error.response.data;
       }
@@ -55,7 +55,9 @@ export default class SessionApi {
     }
   }
 
-  static async finishSession(sessionId: string): Promise<ApiResponse<SessionType>> {
+  static async finishSession(
+    sessionId: string,
+  ): Promise<ApiResponse<SessionType>> {
     try {
       const response = await axiosInstance.patch(
         `/sessions/${sessionId}/finish`,
@@ -68,15 +70,15 @@ export default class SessionApi {
       throw error;
     }
   }
-  
-   static async createMessage(
+
+  static async createMessage(
     sessionId: string,
-    params: CreateMessageParamsType
+    params: CreateMessageParamsType,
   ): Promise<ApiResponse<MessageType>> {
     try {
       const response = await axiosInstance.post(
         `/sessions/${sessionId}/messages`,
-        params
+        params,
       );
       return response.data;
     } catch (error: unknown) {

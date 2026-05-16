@@ -1,8 +1,8 @@
 "use client";
 import SessionApi from "@/entities/session/api/sessionApi";
 import { useState } from "react";
+import type { InterviewType } from "@/entities/session/model/types";
 
-type InterviewType = "ai" | "live";
 type DifficultyLevelType = "junior" | "middle" | "senior";
 type LanguageType =
   | "javascript"

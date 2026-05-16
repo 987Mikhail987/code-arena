@@ -6,7 +6,7 @@ export type SessionType = {
   id: string;
   userId: string;
   type: InterviewType;
-  topic?: string;
+  topic: string;
   status: SessionStatusType;
   createdAt: string;
 };
