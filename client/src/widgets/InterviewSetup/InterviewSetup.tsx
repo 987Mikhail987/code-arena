@@ -37,7 +37,7 @@ export function InterviewSetup({
       const interview = await SessionApi.createSession({
         type: interviewType,
         level,
-        topic: topic || "Реальное собеседование",
+        topic: topic? topic: 'рандом',
       });
       console.log("Полный ответ от API:", interview);
       onStart(interview.data.id);
