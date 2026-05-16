@@ -5,8 +5,8 @@ import { InterviewSetup } from "@/widgets/InterviewSetup/InterviewSetup";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import styles from "./page.module.css";
+import type {InterviewType} from "@/entities/session/model/types";
 
-type InterviewType = "ai" | "human";
 type StepType = "choice" | "configuring";
 
 export default function DashboardPage() {

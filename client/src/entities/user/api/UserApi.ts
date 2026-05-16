@@ -1,5 +1,5 @@
 import axios from "axios";
-import { axiosInstance } from "../../../shared/lib/axiosInstance";
+import { axiosInstance } from "@/shared/lib/axiosInstance";
 import type {
   AuthResponseData,
   LoginData,

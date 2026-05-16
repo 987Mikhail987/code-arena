@@ -1,70 +1,91 @@
 const AiService = require("../services/AiService");
-const RequestService = require("../services/RequestService");
 const formatResponse = require("../utils/formatResponse");
 
 class AiController {
   static async getAiAnswer(req, res) {
-    const { content, type, level } = req.body;
-    const { user } = res.locals;
+    const {
+      difficulty,
+      programmingLanguage,
+      topic,
+      message,
+      previousResponseId,
+      messages,
+    } = req.body;
 
-    if (!content || !type || !level) {
-      return res
-        .status(400)
-        .json(formatResponse(400, "Недостаточно данных для генерации ответа"));
-    }
+    const allowedDifficulties = ["junior", "middle", "senior"];
 
-    if (content.length > 250) {
+    if (!allowedDifficulties.includes(difficulty)) {
       return res
         .status(400)
         .json(
           formatResponse(
             400,
-            "Слишком длинный запрос. Максимальная длина - 250 символов",
+            "difficulty должен быть одним из значений: junior, middle, senior",
           ),
         );
     }
 
+    if (
+      typeof programmingLanguage !== "string" ||
+      !programmingLanguage.trim()
+    ) {
+      return res
+        .status(400)
+        .json(formatResponse(400, "Поле programmingLanguage обязательно"));
+    }
+
+    if (topic !== undefined && typeof topic !== "string") {
+      return res
+        .status(400)
+        .json(formatResponse(400, "Поле topic должно быть строкой"));
+    }
+
+    if (message !== undefined && typeof message !== "string") {
+      return res
+        .status(400)
+        .json(formatResponse(400, "Поле message должно быть строкой"));
+    }
+
+    if (
+      previousResponseId !== undefined &&
+      typeof previousResponseId !== "string"
+    ) {
+      return res
+        .status(400)
+        .json(formatResponse(400, "Поле previousResponseId должно быть строкой"));
+    }
+
+    if (messages !== undefined && !Array.isArray(messages)) {
+      return res
+        .status(400)
+        .json(formatResponse(400, "Поле messages должно быть массивом"));
+    }
+
     try {
-      const session = await RequestService.createRequest({
-        topic: content,
-        type,
-        level,
-        status: "complited",
-        user_id: user.id,
+      const answer = await AiService.getAiAnswer({
+        difficulty,
+        programmingLanguage,
+        topic,
+        message,
+        previousResponseId,
+        messages,
       });
-
-      const answer = await AiService.generateAnswer({ content, type, level });
-      if (!answer) {
-        return res
-          .status(500)
-          .json(
-            formatResponse(
-              500,
-              "Ошибка при генерации ответа, попробуйте позже",
-            ),
-          );
-      }
-
-      session.result = answer;
-      await session.save();
-
-      await RequestService.createMessages(session.id, [
-        { role: "user", content },
-        { role: "assistant", content: JSON.stringify(answer) },
-      ]);
 
       return res
         .status(200)
-        .json(formatResponse(200, "Ответ успешно сгенерирован", session));
+        .json(formatResponse(200, "Ответ от AI успешно получен", answer));
     } catch (error) {
+      console.log("======== AiController.getAiAnswer =========");
       console.log(error);
 
+      const statusCode = Number.isInteger(error?.status) ? error.status : 500;
+
       return res
-        .status(500)
+        .status(statusCode)
         .json(
           formatResponse(
-            500,
-            "Ошибка при генерации ответа на стороне сервера",
+            statusCode,
+            "Ошибка сервера при получении ответа от AI",
             null,
             error.message,
           ),

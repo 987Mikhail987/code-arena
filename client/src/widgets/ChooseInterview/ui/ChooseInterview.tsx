@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "./ChooseInterview.module.css";
+import type { InterviewType } from "@/entities/session/model/types";
 
-type InterviewType = "ai" | "human";
 type ChooseInterviewPropsType = {
   onSelect: (type: InterviewType) => void;
 };
@@ -19,7 +19,7 @@ export default function ChooseInterview({
         <h2>AI Интервью</h2>
         <p>Пройдите собеседование с искусственным интеллектом</p>
       </button>
-      <button className={styles.choiceCard} key="human" onClick={handleHumanInterview}>
+      <button className={styles.choiceCard} key="live" onClick={handleHumanInterview}>
         <h2>Живое интервью</h2>
         <p>Реальное собеседование</p>
       </button>
