@@ -1,15 +1,27 @@
 const MessageService = require("../services/MessageService");
 const SessionService = require("../services/SessionService");
+const AiService = require("../services/AiService");
 const formatResponse = require("../utils/formatResponse");
 
 const SESSION_TYPES = ["ai", "live"];
 const SESSION_LEVELS = ["junior", "middle", "senior"];
 const MESSAGE_ROLES = ["user", "assistant"];
+const PROGRAMMING_LANGUAGES = [
+  "javascript",
+  "typescript",
+  "python",
+  "go",
+  "html",
+  "css",
+  "java",
+  "c",
+  "csharp",
+];
 
 class SessionController {
   static async createSession(req, res) {
     const { user } = res.locals;
-    const { content, level, type = "ai" } = req.body;
+    const { content, level, type = "ai", programmingLanguage } = req.body;
     const topic = req.body.topic ?? content;
 
     if (!topic || typeof topic !== "string" || topic.trim().length === 0) {
@@ -21,7 +33,12 @@ class SessionController {
     if (topic.length > 250) {
       return res
         .status(400)
-        .json(formatResponse(400, "Слишком длинная тема. Максимальная длина - 250 символов"));
+        .json(
+          formatResponse(
+            400,
+            "Слишком длинная тема. Максимальная длина - 250 символов",
+          ),
+        );
     }
 
     if (!SESSION_TYPES.includes(type)) {
@@ -36,6 +53,12 @@ class SessionController {
         .json(formatResponse(400, "Некорректный уровень тренировочной сессии"));
     }
 
+    if (!PROGRAMMING_LANGUAGES.includes(programmingLanguage)) {
+      return res
+        .status(400)
+        .json(formatResponse(400, "Некорректный язык программирования"));
+    }
+
     try {
       const session = await SessionService.createSession({
         user_id: user.id,
@@ -43,11 +66,31 @@ class SessionController {
         status: "active",
         level,
         topic: topic.trim(),
+        programming_language: programmingLanguage,
       });
+
+      let firstMessage = null;
+      if (type === "ai") {
+        const aiData = await AiService.getAiAnswer({
+          difficulty: level,
+          programmingLanguage,
+          topic: topic.trim(),
+        });
+
+        firstMessage = await MessageService.createSessionMessage(session.id, {
+          role: "assistant",
+          content: aiData.answer,
+        });
+      }
 
       return res
         .status(201)
-        .json(formatResponse(201, "Тренировочная сессия создана", session));
+        .json(
+          formatResponse(201, "Тренировочная сессия создана", {
+            session,
+            message: firstMessage ? [firstMessage] : [],
+          }),
+        );
     } catch (error) {
       console.log("======== SessionController.createSession =========");
       console.log(error);
@@ -65,7 +108,13 @@ class SessionController {
 
       return res
         .status(200)
-        .json(formatResponse(200, "История тренировочных сессий получена", sessions));
+        .json(
+          formatResponse(
+            200,
+            "История тренировочных сессий получена",
+            sessions,
+          ),
+        );
     } catch (error) {
       console.log("======== SessionController.getUserSessions =========");
       console.log(error);
@@ -86,7 +135,10 @@ class SessionController {
     }
 
     try {
-      const session = await SessionService.getUserSessionById(sessionId, user.id);
+      const session = await SessionService.getUserSessionById(
+        sessionId,
+        user.id,
+      );
 
       if (!session) {
         return res
@@ -154,7 +206,11 @@ class SessionController {
         .json(formatResponse(400, "Некорректная роль сообщения"));
     }
 
-    if (!content || typeof content !== "string" || content.trim().length === 0) {
+    if (
+      !content ||
+      typeof content !== "string" ||
+      content.trim().length === 0
+    ) {
       return res
         .status(400)
         .json(formatResponse(400, "Пустое сообщение нельзя сохранить"));
