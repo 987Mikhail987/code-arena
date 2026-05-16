@@ -1,6 +1,7 @@
 "use client";
 import SessionApi from "@/entities/session/api/sessionApi";
 import { useState } from "react";
+import styles from "./InterviewSetup.module.css";
 import type { InterviewType } from "@/entities/session/model/types";
 
 type DifficultyLevelType = "junior" | "middle" | "senior";
@@ -48,16 +49,19 @@ export function InterviewSetup({
   };
 
   return (
-    <div>
-      <button onClick={onBack}>Назад к выбору собеседования</button>
+    <section className={styles.setup}>
+      <button className={styles.backButton} onClick={onBack}>
+        Назад к выбору собеседования
+      </button>
 
-      <div>
+      <div className={styles.card}>
         <h2>Настройки интервью</h2>
         <p>Тип: {interviewType === "ai" ? "AI Интервью" : "Живое интервью"}</p>
 
-        <div>
+
+        <div className={styles.field}>
           <label htmlFor="level">Сложность интервью</label>
-        </div>
+
         <select
           id="level"
           value={level}
@@ -69,41 +73,47 @@ export function InterviewSetup({
           <option value="middle">middle</option>
           <option value="senior">senior</option>
         </select>
+</div>
 
-        <div>
-          <label htmlFor="difficulty">Выбор языка</label>
+
+        <div className={styles.field}>
+          <label htmlFor="language">Выбор языка</label>
+          <select
+            id="language"
+            value={language}
+            onChange={(event) => setLanguage(event.target.value as LanguageType)}
+          >
+            <option value="javascript">javascript</option>
+            <option value="typescript">typescript</option>
+            <option value="python">python</option>
+            <option value="go">go</option>
+            <option value="html">html</option>
+            <option value="css">css</option>
+            <option value="java">java</option>
+            <option value="c">c</option>
+            <option value="csharp">csharp</option>
+          </select>
         </div>
-        <select
-          id="language"
-          value={language}
-          onChange={(event) => setLanguage(event.target.value as LanguageType)}
-        >
-          <option value="javascript">javascript</option>
-          <option value="typescript">typescript</option>
-          <option value="python">python</option>
-          <option value="go">go</option>
-          <option value="html">html</option>
-          <option value="css">css</option>
-          <option value="java">java</option>
-          <option value="c">c</option>
-          <option value="csharp">csharp</option>
-        </select>
 
-        <div>
+        <div className={styles.field}>
           <label htmlFor="topic">Тема тренировки (необязательно)</label>
+          <input
+            id="topic"
+            type="text"
+            value={topic}
+            onChange={(event) => setTopic(event.target.value)}
+            placeholder="Например React"
+          />
         </div>
-        <input
-          id="topic"
-          type="text"
-          value={topic}
-          onChange={(event) => setTopic(event.target.value)}
-          placeholder="Например React"
-        />
       </div>
 
-      <button onClick={handleStart} disabled={isLoading}>
+      <button
+        className={styles.startButton}
+        onClick={handleStart}
+        disabled={isLoading}
+      >
         {isLoading ? "Создаем..." : "Начать интервью"}
       </button>
-    </div>
+    </section>
   );
 }

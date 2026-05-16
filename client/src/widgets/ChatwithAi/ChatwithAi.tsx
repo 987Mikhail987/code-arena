@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import styles from "./ChatwithAi.module.css";
 
 export type Message = {
   id: string;
@@ -54,33 +55,20 @@ export default function Chat({
   };
 
   return (
-    <section
-      style={{
-        height: "50vh",
-        width: "40vw",
-        border: "1px solid #ccc",
-        display: "flex",
-        flexDirection: "column",
-        padding: "12px",
-        gap: "12px",
-      }}
-    >
+    <section className={styles.chat}>
       <h3>{title}</h3>
 
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          display: "flex",
-          flexDirection: "column",
-          gap: "8px",
-        }}
-      >
+      <div className={styles.messages}>
         {chatMessages.length === 0 ? (
-          <div>Начните диалог с AI</div>
+          <div className={styles.emptyState}>Начните диалог с AI</div>
         ) : (
           chatMessages.map((message) => (
-            <div key={message.id}>
+            <div
+              className={
+                message.role === "user" ? styles.userMessage : styles.aiMessage
+              }
+              key={message.id}
+            >
               <strong>{message.role === "user" ? "Вы" : "AI"}:</strong>{" "}
               {message.content}
             </div>
@@ -88,13 +76,12 @@ export default function Chat({
         )}
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", gap: "8px" }}>
+      <form className={styles.form} onSubmit={handleSubmit}>
         <input
           type="text"
           value={inputValue}
           onChange={(event) => setInputValue(event.target.value)}
           placeholder={placeholder}
-          style={{ flex: 1 }}
         />
         <button type="submit" disabled={!inputValue.trim()}>
           Отправить

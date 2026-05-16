@@ -1,6 +1,7 @@
 "use client";
 import { Editor } from "@monaco-editor/react";
 import React, { useState } from "react";
+import styles from "./Redactor.module.css";
 
 
 export type MonacoLanguage =
@@ -35,10 +36,10 @@ export default function Redactor({
   };
 
   return (
-    <div>
+    <div className={styles.editorShell}>
       <Editor
-        height="50vh"
-        width="40vw"
+        height="520px"
+        width="100%"
         language={language} 
         defaultValue={initialCode} 
         value={code}

@@ -1,0 +1,9 @@
+.editorShell {
+  min-height: 520px;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background-color: rgba(22, 27, 34, 0.86);
+  box-shadow: var(--shadow);
+}

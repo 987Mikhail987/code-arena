@@ -4,6 +4,7 @@ import ChooseInterview from "@/widgets/ChooseInterview/ui/ChooseInterview";
 import { InterviewSetup } from "@/widgets/InterviewSetup/InterviewSetup";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import styles from "./page.module.css";
 import type {InterviewType} from "@/entities/session/model/types";
 
 type StepType = "choice" | "configuring";
@@ -31,8 +32,11 @@ export default function DashboardPage() {
 
   return (
     <UserGuard mode="authenticated" redirectTo="/auth">
-      <div>
-        <h1>Сможешь сделать свой выбор ?</h1>
+      <div className={`app-container ${styles.dashboardPage}`}>
+        <section className={styles.heading}>
+          <p>Тренировка</p>
+          <h1>Сможешь сделать свой выбор?</h1>
+        </section>
         {step === "choice" && <ChooseInterview onSelect={handleTypeSelect} />}
 
         {step === "configuring" && interviewType && (
