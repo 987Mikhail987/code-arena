@@ -1,7 +1,8 @@
 "use client";
+import SessionApi from "@/entities/session/api/sessionApi";
 import { useState } from "react";
+import type { InterviewType } from "@/entities/session/model/types";
 
-type InterviewType = "ai" | "human";
 type DifficultyLevelType = "junior" | "middle" | "senior";
 type LanguageType =
   | "javascript"
@@ -24,7 +25,7 @@ export function InterviewSetup({
   onStart,
   onBack,
 }: InterviewSetupPropsType) {
-  const [difficulty, setDifficulty] = useState<DifficultyLevelType>("junior");
+  const [level, setLevel] = useState<DifficultyLevelType>("junior");
   const [topic, setTopic] = useState("");
   const [language, setLanguage] = useState<LanguageType>("javascript");
   const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +33,13 @@ export function InterviewSetup({
   const handleStart = async () => {
     setIsLoading(true);
     try {
-      console.log("Создание комнаты 1" + `${onStart("1")}`);
+      const interview = await SessionApi.createSession({
+        type: interviewType,
+        level,
+        topic: topic || "Реальное собеседование",
+      });
+      console.log("Полный ответ от API:", interview);
+      onStart(interview.data.id);
     } catch (error) {
       console.error("Ошибка создания интервью:", error);
     } finally {
@@ -49,13 +56,13 @@ export function InterviewSetup({
         <p>Тип: {interviewType === "ai" ? "AI Интервью" : "Живое интервью"}</p>
 
         <div>
-          <label htmlFor="difficulty">Сложность интервью</label>
+          <label htmlFor="level">Сложность интервью</label>
         </div>
         <select
-          id="difficulty"
-          value={difficulty}
+          id="level"
+          value={level}
           onChange={(event) =>
-            setDifficulty(event.target.value as DifficultyLevelType)
+            setLevel(event.target.value as DifficultyLevelType)
           }
         >
           <option value="junior">junior</option>
