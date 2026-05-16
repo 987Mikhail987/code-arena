@@ -5,6 +5,16 @@ class SessionService {
     return Session.create(sessionData);
   }
 
+  static async getActiveSession(userId) {
+    return Session.findOne({
+      where: {
+        user_id: userId,
+        status: "active",
+      },
+      order: [["createdAt", "DESC"]],
+    });
+  }
+
   static async getUserSessions(userId) {
     return Session.findAll({
       where: { user_id: userId },

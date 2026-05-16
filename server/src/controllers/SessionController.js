@@ -37,6 +37,20 @@ class SessionController {
     }
 
     try {
+      const activeSession = await SessionService.getActiveSession(user.id);
+
+      if (activeSession) {
+        return res
+          .status(409)
+          .json(
+            formatResponse(
+              409,
+              "Сначала завершите активное интервью",
+              activeSession,
+            ),
+          );
+      }
+
       const session = await SessionService.createSession({
         user_id: user.id,
         type,
