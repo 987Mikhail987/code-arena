@@ -6,9 +6,15 @@ export type SessionType = {
   id: string;
   userId: string;
   type: InterviewType;
+  level?: DifficultyType;
   topic: string;
   status: SessionStatusType;
   createdAt: string;
+  result?: {
+    messages: MessageType[];
+    code: string;
+    feedback: string;
+  };
 };
 
 export type MessageType = {
