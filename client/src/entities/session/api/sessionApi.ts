@@ -57,11 +57,10 @@ export default class SessionApi {
 
   static async finishSession(
     sessionId: string,
-  ): Promise<ApiResponse<SessionType>> {
+    params: { code: string; programmingLanguage: string },
+  ): Promise<ApiResponse<{ session: SessionType; feedback: string }>> {
     try {
-      const response = await axiosInstance.patch(
-        `/sessions/${sessionId}/finish`,
-      );
+      const response = await axiosInstance.patch(`/sessions/${sessionId}/finish`, params);
       return response.data;
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response) {

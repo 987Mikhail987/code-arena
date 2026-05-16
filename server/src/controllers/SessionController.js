@@ -1,3 +1,4 @@
+const AiService = require("../services/AiService");
 const MessageService = require("../services/MessageService");
 const SessionService = require("../services/SessionService");
 const formatResponse = require("../utils/formatResponse");
@@ -21,7 +22,12 @@ class SessionController {
     if (topic.length > 250) {
       return res
         .status(400)
-        .json(formatResponse(400, "Слишком длинная тема. Максимальная длина - 250 символов"));
+        .json(
+          formatResponse(
+            400,
+            "Слишком длинная тема. Максимальная длина - 250 символов",
+          ),
+        );
     }
 
     if (!SESSION_TYPES.includes(type)) {
@@ -109,6 +115,7 @@ class SessionController {
   static async finishSession(req, res) {
     const { user } = res.locals;
     const { sessionId } = req.params;
+    const { code = "", programmingLanguage = "javascript" } = req.body || {};
 
     if (Number.isNaN(Number(sessionId))) {
       return res
@@ -117,7 +124,7 @@ class SessionController {
     }
 
     try {
-      const session = await SessionService.finishSession(sessionId, user.id);
+      const session = await SessionService.getUserSessionById(sessionId, user.id);
 
       if (!session) {
         return res
@@ -125,9 +132,48 @@ class SessionController {
           .json(formatResponse(404, "Тренировочная сессия не найдена"));
       }
 
-      return res
-        .status(200)
-        .json(formatResponse(200, "Тренировочная сессия завершена", session));
+      if (session.status === "complited") {
+        return res.status(200).json(
+          formatResponse(200, "Тренировочная сессия завершена", {
+            session,
+            feedback: session.result?.feedback || "",
+          }),
+        );
+      }
+
+      const resultMessages = (session.messages || []).map((message) => ({
+        id: message.id,
+        role: message.role,
+        content: message.content,
+        createdAt: message.createdAt,
+      }));
+
+      const feedback = await AiService.generateInterviewFeedback({
+        difficulty: session.level,
+        programmingLanguage,
+        topic: session.topic,
+        messages: resultMessages,
+        code,
+      });
+
+      const result = {
+        messages: resultMessages,
+        code: typeof code === "string" ? code : "",
+        feedback,
+      };
+
+      const finishedSession = await SessionService.saveSessionResult(
+        sessionId,
+        user.id,
+        result,
+      );
+
+      return res.status(200).json(
+        formatResponse(200, "Тренировочная сессия завершена", {
+          session: finishedSession,
+          feedback,
+        }),
+      );
     } catch (error) {
       console.log("======== SessionController.finishSession =========");
       console.log(error);

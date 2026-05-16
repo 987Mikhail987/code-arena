@@ -15,6 +15,9 @@ export default function RoomPage() {
   const [isFinishing, setIsFinishing] = useState(false);
   const [sessionError, setSessionError] = useState("");
   const [finishError, setFinishError] = useState("");
+  const [code, setCode] = useState("// Ваш код");
+  const [feedback, setFeedback] = useState("");
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const isComplited = status === "complited";
   const isRoomDisabled = isLoadingSession || Boolean(sessionError) || isComplited;
@@ -36,6 +39,12 @@ export default function RoomPage() {
 
         if (response.statusCode === 200) {
           setStatus(response.data.status);
+          if (response.data.result?.feedback) {
+            setFeedback(response.data.result.feedback);
+          }
+          if (response.data.result?.code) {
+            setCode(response.data.result.code);
+          }
           return;
         }
 
@@ -60,6 +69,9 @@ export default function RoomPage() {
 
   async function handleFinishInterview() {
     if (isComplited) {
+      if (feedback) {
+        setIsFeedbackOpen(true);
+      }
       return;
     }
 
@@ -67,10 +79,15 @@ export default function RoomPage() {
     setFinishError("");
 
     try {
-      const response = await SessionApi.finishSession(params.id);
+      const response = await SessionApi.finishSession(params.id, {
+        code,
+        programmingLanguage: "javascript",
+      });
 
       if (response.statusCode === 200) {
-        setStatus(response.data.status);
+        setStatus(response.data.session.status);
+        setFeedback(response.data.feedback);
+        setIsFeedbackOpen(true);
         return;
       }
 
@@ -93,23 +110,52 @@ export default function RoomPage() {
           type="button"
           className={styles.finishButton}
           onClick={handleFinishInterview}
-          disabled={isLoadingSession || Boolean(sessionError) || isFinishing || isComplited}
+          disabled={isLoadingSession || Boolean(sessionError) || isFinishing}
         >
           {isLoadingSession
             ? "Загружаем..."
             : isComplited
-            ? "Интервью завершено"
-            : isFinishing
-              ? "Завершаем..."
-              : "Завершить интервью"}
+              ? "Показать feedback"
+              : isFinishing
+                ? "Завершаем..."
+                : "Завершить интервью"}
         </button>
       </section>
       {sessionError ? <p className={styles.error}>{sessionError}</p> : null}
       {finishError ? <p className={styles.error}>{finishError}</p> : null}
       <div className={styles.workspace}>
         <Chat disabled={isRoomDisabled} />
-        <Redactor disabled={isRoomDisabled} />
+        <Redactor disabled={isRoomDisabled} onChange={setCode} initialCode={code} />
       </div>
+      {isFeedbackOpen ? (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.35)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              color: "#111111",
+              width: "100%",
+              maxWidth: "720px",
+              padding: "24px",
+            }}
+          >
+            <h3>Feedback по интервью</h3>
+            <p style={{ whiteSpace: "pre-wrap" }}>{feedback}</p>
+            <button type="button" onClick={() => setIsFeedbackOpen(false)}>
+              Закрыть
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
