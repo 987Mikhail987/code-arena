@@ -78,11 +78,13 @@ class AiController {
       console.log("======== AiController.getAiAnswer =========");
       console.log(error);
 
+      const statusCode = Number.isInteger(error?.status) ? error.status : 500;
+
       return res
-        .status(500)
+        .status(statusCode)
         .json(
           formatResponse(
-            500,
+            statusCode,
             "Ошибка сервера при получении ответа от AI",
             null,
             error.message,
