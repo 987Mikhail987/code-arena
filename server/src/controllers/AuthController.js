@@ -148,9 +148,20 @@ class AuthController {
   }
 
   static async refreshTokens(req, res) {
-    const { user } = res.locals;
+    const tokenUser = res.locals.user;
 
     try {
+      const user = await AuthService.findUserById(tokenUser.id);
+
+      if (!user) {
+        return res
+          .status(401)
+          .clearCookie("refreshToken")
+          .json(formatResponse(401, "Пользовательская сессия недействительна"));
+      }
+
+      delete user.password;
+
       const { accessToken, refreshToken } = generateTokens({ user });
 
       return res

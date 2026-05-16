@@ -1,4 +1,5 @@
 import React from "react";
+import styles from "./ChooseInterview.module.css";
 import type { InterviewType } from "@/entities/session/model/types";
 
 type ChooseInterviewPropsType = {
@@ -13,12 +14,12 @@ export default function ChooseInterview({
   };
 
   return (
-    <div>
-      <button key="ai" onClick={() => onSelect("ai")}>
+    <div className={styles.choices}>
+      <button className={styles.choiceCard} key="ai" onClick={() => onSelect("ai")}>
         <h2>AI Интервью</h2>
         <p>Пройдите собеседование с искусственным интеллектом</p>
       </button>
-      <button key="live" onClick={handleHumanInterview}>
+      <button className={styles.choiceCard} key="live" onClick={handleHumanInterview}>
         <h2>Живое интервью</h2>
         <p>Реальное собеседование</p>
       </button>

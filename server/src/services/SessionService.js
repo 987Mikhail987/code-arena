@@ -41,6 +41,10 @@ class SessionService {
       return null;
     }
 
+    if (session.status === "complited") {
+      return session;
+    }
+
     session.status = "complited";
     await session.save();
 

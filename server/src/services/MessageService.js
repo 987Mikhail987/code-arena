@@ -13,6 +13,10 @@ class MessageService {
       return null;
     }
 
+    if (session.status === "complited") {
+      return { isComplited: true };
+    }
+
     return Message.create({
       session_id: sessionId,
       ...messageData,

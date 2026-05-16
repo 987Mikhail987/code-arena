@@ -1,6 +1,39 @@
 :root {
-  --background: #f6efe7;
-  --foreground: #1f1a14;
+  --background: #070607;
+  --background-soft: #120d0f;
+  --surface: #181113;
+  --surface-strong: #211519;
+  --surface-muted: #2b2023;
+  --foreground: #fff6f4;
+  --foreground-muted: #b9a8a6;
+  --border: rgba(255, 196, 188, 0.14);
+  --accent: #e45252;
+  --accent-strong: #ff6b5f;
+  --accent-muted: rgba(228, 82, 82, 0.14);
+  --danger: #ff4d4d;
+  --danger-strong: #b32626;
+  --control-bg: rgba(19, 14, 16, 0.86);
+  --control-bg-strong: rgba(31, 19, 22, 0.96);
+  --shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+}
+
+html[data-theme="light"] {
+  --background: #f7efed;
+  --background-soft: #fff8f6;
+  --surface: #fffdfb;
+  --surface-strong: #f6e8e5;
+  --surface-muted: #ead8d4;
+  --foreground: #1d1415;
+  --foreground-muted: #6e5d5b;
+  --border: rgba(77, 31, 34, 0.16);
+  --accent: #b92f35;
+  --accent-strong: #8f1f26;
+  --accent-muted: rgba(185, 47, 53, 0.11);
+  --danger: #b32626;
+  --danger-strong: #7f171b;
+  --control-bg: rgba(255, 253, 251, 0.92);
+  --control-bg-strong: rgba(246, 232, 229, 0.98);
+  --shadow: 0 18px 44px rgba(77, 31, 34, 0.12);
 }
 
 html {
@@ -19,11 +52,17 @@ body {
   flex-direction: column;
   color: var(--foreground);
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.78), transparent 35%),
-    linear-gradient(180deg, #fcf7f0 0%, var(--background) 100%);
+    radial-gradient(circle at 12% 0%, rgba(228, 82, 82, 0.2), transparent 30%),
+    radial-gradient(circle at 92% 12%, rgba(148, 32, 40, 0.16), transparent 28%),
+    linear-gradient(180deg, var(--background-soft) 0%, var(--background) 100%);
+  background-attachment: fixed;
   font-family: "Segoe UI", Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html[data-theme="light"] body {
+  background: var(--background);
 }
 
 * {
@@ -39,6 +78,8 @@ a {
 
 .app-shell {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .app-container {
@@ -47,6 +88,21 @@ a {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+::selection {
+  color: #fff7f4;
+  background-color: var(--accent);
 }

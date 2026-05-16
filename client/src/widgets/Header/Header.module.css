@@ -1,0 +1,201 @@
+.siteHeader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  border-bottom: 1px solid var(--border);
+  background-color: color-mix(in srgb, var(--background) 88%, transparent);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.24);
+}
+
+.headerContent {
+  min-height: 76px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.headerNav,
+.userActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navLink {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--foreground-muted);
+  font-size: 15px;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.navLink:hover {
+  border-color: var(--border);
+  background-color: var(--accent-muted);
+  color: var(--foreground);
+}
+
+.userBadge {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 9px 13px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--control-bg);
+  color: var(--foreground);
+  font-size: 14px;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.userBadge:hover {
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+  background-color: var(--accent-muted);
+  color: var(--accent-strong);
+}
+
+.themeSwitch {
+  width: 58px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background-color: var(--control-bg);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.themeSwitch:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+}
+
+.themeSwitch:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--accent-muted);
+}
+
+.themeTrack {
+  position: relative;
+  width: 44px;
+  height: 22px;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--foreground-muted) 24%, transparent);
+  transition: background-color 0.2s ease;
+}
+
+.themeThumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 36%, transparent);
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease;
+}
+
+:global(html[data-theme="light"]) .themeTrack {
+  background-color: color-mix(in srgb, var(--accent) 22%, var(--surface));
+}
+
+:global(html[data-theme="light"]) .themeThumb {
+  transform: translateX(22px);
+}
+
+.logoutButton {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--danger) 38%, transparent);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.logoutButton:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--danger) 72%, transparent);
+  background-color: color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
+.logoutIcon {
+  position: relative;
+  width: 17px;
+  height: 20px;
+  border: 2px solid currentColor;
+  border-right: 0;
+  border-radius: 3px 0 0 3px;
+}
+
+.logoutIcon::before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  right: -9px;
+  width: 12px;
+  height: 2px;
+  border-radius: 999px;
+  background-color: currentColor;
+}
+
+.logoutIcon::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: -10px;
+  width: 7px;
+  height: 7px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+
+@media (max-width: 720px) {
+  .headerContent {
+    min-height: auto;
+    padding: 14px 0;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .headerNav {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .userActions {
+    justify-content: flex-end;
+  }
+}

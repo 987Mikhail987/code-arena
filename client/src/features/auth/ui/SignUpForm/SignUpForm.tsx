@@ -13,7 +13,6 @@ import {
 import { setAccessToken } from "@/shared/lib/axiosInstance";
 import FormInput from "@/shared/ui/FormInput/FormInput";
 import "./SignUpForm.css";
-import { useRef } from "react";
 
 export default function SignUpForm() {
   const dispatch = useAppDispatch();

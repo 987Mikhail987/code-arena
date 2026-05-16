@@ -1,0 +1,58 @@
+.homePage {
+  display: grid;
+  gap: 22px;
+  padding: 28px 0 0;
+}
+
+.hero,
+.section {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--surface) 86%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.hero {
+  padding: 42px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 22%, transparent), transparent 42%),
+    color-mix(in srgb, var(--surface) 88%, transparent);
+}
+
+.hero h1 {
+  margin: 0 0 14px;
+  font-size: clamp(40px, 7vw, 72px);
+  line-height: 0.95;
+}
+
+.hero p,
+.section p,
+.section li {
+  color: var(--foreground-muted);
+  line-height: 1.7;
+}
+
+.section {
+  padding: 28px;
+}
+
+.section h2 {
+  margin: 0 0 16px;
+}
+
+.section ul {
+  display: grid;
+  gap: 10px;
+  padding-left: 20px;
+}
+
+@media (max-width: 640px) {
+  .hero,
+  .section {
+    border-radius: 8px;
+  }
+
+  .hero {
+    padding: 28px;
+  }
+}

@@ -1,22 +1,22 @@
 .profilePage {
   display: grid;
   gap: 24px;
-  padding: 36px 0 56px;
+  padding: 36px 0 0;
 }
 
 .heroCard {
   padding: 32px;
-  border: 1px solid rgba(146, 118, 85, 0.18);
-  border-radius: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   background:
-    radial-gradient(circle at top left, rgba(214, 182, 142, 0.34), transparent 38%),
-    linear-gradient(135deg, rgba(255, 250, 243, 0.98), rgba(247, 239, 228, 0.92));
-  box-shadow: 0 22px 60px rgba(94, 71, 44, 0.12);
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, transparent), transparent 44%),
+    color-mix(in srgb, var(--surface) 92%, transparent);
+  box-shadow: var(--shadow);
 }
 
 .kicker {
   margin: 0 0 10px;
-  color: #8b6b43;
+  color: var(--accent);
   text-transform: uppercase;
   font-size: 12px;
   letter-spacing: 0.12em;
@@ -27,12 +27,12 @@
   margin: 0;
   font-size: clamp(36px, 5vw, 56px);
   line-height: 0.95;
-  color: #201d19;
+  color: var(--foreground);
 }
 
 .subtitle {
   margin: 14px 0 0;
-  color: #5e564d;
+  color: var(--foreground-muted);
   font-size: 17px;
 }
 
@@ -48,9 +48,10 @@
   align-items: center;
   min-height: 38px;
   padding: 0 16px;
-  border-radius: 999px;
-  background-color: rgba(125, 95, 59, 0.12);
-  color: #6d5230;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background-color: var(--accent-muted);
+  color: var(--accent-strong);
   font-weight: 700;
 }
 
@@ -62,16 +63,16 @@
 
 .card {
   padding: 28px;
-  border: 1px solid rgba(146, 118, 85, 0.16);
-  border-radius: 28px;
-  background-color: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 20px 55px rgba(80, 61, 42, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: var(--shadow);
 }
 
 .cardTitle {
   margin: 0 0 18px;
   font-size: 22px;
-  color: #201d19;
+  color: var(--foreground);
 }
 
 .form {
@@ -85,7 +86,7 @@
 
 .formError {
   margin: 8px 4px 0;
-  color: #b24545;
+  color: #fca5a5;
   font-size: 13px;
   line-height: 1.4;
 }
@@ -98,6 +99,21 @@
   width: 100%;
   appearance: none;
   cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+    linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+  background-position:
+    calc(100% - 22px) 28px,
+    calc(100% - 16px) 28px;
+  background-size:
+    6px 6px,
+    6px 6px;
+  background-repeat: no-repeat;
+}
+
+.select option {
+  background-color: var(--surface);
+  color: var(--foreground);
 }
 
 .selectLabel {
@@ -109,7 +125,7 @@
 .dangerButton {
   min-height: 52px;
   border: 0;
-  border-radius: 16px;
+  border-radius: 8px;
   padding: 0 18px;
   font-weight: 700;
   transition:
@@ -119,20 +135,21 @@
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, #8b6440, #6c4f31);
-  color: #fffdf9;
-  box-shadow: 0 16px 30px rgba(108, 79, 49, 0.24);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff7f4;
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .secondaryButton {
-  background-color: rgba(125, 95, 59, 0.12);
-  color: #6d5230;
+  border: 1px solid var(--border);
+  background-color: color-mix(in srgb, var(--foreground-muted) 8%, transparent);
+  color: var(--foreground);
 }
 
 .dangerButton {
-  background: linear-gradient(135deg, #b24545, #8f3131);
+  background: linear-gradient(135deg, var(--danger), var(--danger-strong));
   color: #fff7f7;
-  box-shadow: 0 16px 30px rgba(143, 49, 49, 0.2);
+  box-shadow: 0 14px 28px rgba(239, 68, 68, 0.18);
 }
 
 .primaryButton:hover,
@@ -157,7 +174,7 @@
 
 .message {
   margin: 18px 0 0;
-  color: #5d554c;
+  color: var(--foreground-muted);
 }
 
 @media (max-width: 860px) {
@@ -168,13 +185,13 @@
 
 @media (max-width: 640px) {
   .profilePage {
-    padding: 24px 0 40px;
+    padding: 24px 0 0;
   }
 
   .heroCard,
   .card {
     padding: 22px;
-    border-radius: 24px;
+    border-radius: 8px;
   }
 
   .actions {
