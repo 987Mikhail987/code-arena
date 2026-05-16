@@ -15,6 +15,7 @@ export type ChatProps = {
   isTyping?: boolean;
   placeholder?: string;
   title?: string;
+  disabled?: boolean;
 };
 
 export default function Chat({
@@ -22,6 +23,7 @@ export default function Chat({
   onSendMessage,
   placeholder = "Напишите сообщение...",
   title = "Чат с AI",
+  disabled = false,
 }: ChatProps) {
   const [inputValue, setInputValue] = useState("");
   const [chatMessages, setChatMessages] = useState<Message[]>(messages);
@@ -31,7 +33,7 @@ export default function Chat({
 
     const trimmedValue = inputValue.trim();
 
-    if (!trimmedValue) {
+    if (disabled || !trimmedValue) {
       return;
     }
 
@@ -81,9 +83,10 @@ export default function Chat({
           type="text"
           value={inputValue}
           onChange={(event) => setInputValue(event.target.value)}
-          placeholder={placeholder}
+          placeholder={disabled ? "Интервью завершено" : placeholder}
+          disabled={disabled}
         />
-        <button type="submit" disabled={!inputValue.trim()}>
+        <button type="submit" disabled={disabled || !inputValue.trim()}>
           Отправить
         </button>
       </form>

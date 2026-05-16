@@ -5,8 +5,8 @@
   gap: 14px;
   padding: 18px;
   border: 1px solid var(--border);
-  border-radius: 22px;
-  background-color: rgba(22, 27, 34, 0.86);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--surface) 90%, transparent);
   box-shadow: var(--shadow);
 }
 
@@ -27,7 +27,7 @@
 .userMessage,
 .aiMessage {
   padding: 12px 14px;
-  border-radius: 16px;
+  border-radius: 8px;
   line-height: 1.5;
 }
 
@@ -39,13 +39,13 @@
 .userMessage {
   align-self: flex-end;
   max-width: 88%;
-  background-color: rgba(56, 189, 248, 0.14);
+  background-color: var(--accent-muted);
 }
 
 .aiMessage {
   align-self: flex-start;
   max-width: 88%;
-  background-color: rgba(148, 163, 184, 0.1);
+  background-color: color-mix(in srgb, var(--foreground-muted) 10%, transparent);
 }
 
 .form {
@@ -59,23 +59,23 @@
   min-height: 44px;
   padding: 0 14px;
   border: 1px solid var(--border);
-  border-radius: 999px;
-  background-color: rgba(15, 23, 42, 0.78);
+  border-radius: 8px;
+  background-color: var(--control-bg);
   color: var(--foreground);
   outline: none;
 }
 
 .form input:focus {
-  border-color: rgba(56, 189, 248, 0.72);
+  border-color: color-mix(in srgb, var(--accent) 72%, transparent);
 }
 
 .form button {
   min-height: 44px;
   padding: 0 16px;
   border: 0;
-  border-radius: 999px;
-  background-color: var(--accent);
-  color: #061018;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff7f4;
   font-weight: 700;
 }
 

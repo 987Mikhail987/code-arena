@@ -1,14 +1,16 @@
 .dashboardPage {
   display: grid;
   gap: 24px;
-  padding: 28px 0 56px;
+  padding: 28px 0 0;
 }
 
 .heading {
   padding: 30px;
   border: 1px solid var(--border);
-  border-radius: 24px;
-  background-color: rgba(22, 27, 34, 0.82);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 42%),
+    color-mix(in srgb, var(--surface) 88%, transparent);
   box-shadow: var(--shadow);
 }
 

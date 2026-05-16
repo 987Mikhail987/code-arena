@@ -9,7 +9,11 @@ import UserApi from "@/entities/user/api/UserApi";
 import { setAccessToken } from "@/shared/lib/axiosInstance";
 import styles from "./Header.module.css";
 
-export default function Header() {
+type HeaderProps = {
+  onToggleTheme: () => void;
+};
+
+export default function Header({ onToggleTheme }: HeaderProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
@@ -37,9 +41,6 @@ export default function Header() {
               <Link href="/dashboard" className={styles.navLink}>
                 Интервью
               </Link>
-              <Link href="/profile" className={styles.navLink}>
-                Профиль
-              </Link>
             </>
           ) : (
             <Link href="/auth" className={styles.navLink}>
@@ -48,20 +49,35 @@ export default function Header() {
           )}
         </nav>
 
-        {user ? (
-          <div className={styles.userActions}>
-            <span className={styles.userBadge}>{user.name}</span>
-            <button
-              type="button"
-              className={styles.logoutButton}
-              onClick={handleLogout}
-              aria-label="Выйти из аккаунта"
-              title="Выйти"
-            >
-              <span className={styles.logoutIcon} aria-hidden="true" />
-            </button>
-          </div>
-        ) : null}
+        <div className={styles.userActions}>
+          <button
+            type="button"
+            className={styles.themeSwitch}
+            onClick={onToggleTheme}
+            aria-label="Переключить тему"
+            title="Переключить тему"
+          >
+            <span className={styles.themeTrack} aria-hidden="true">
+              <span className={styles.themeThumb} />
+            </span>
+          </button>
+          {user ? (
+            <>
+              <Link href="/profile" className={styles.userBadge}>
+                {user.name}
+              </Link>
+              <button
+                type="button"
+                className={styles.logoutButton}
+                onClick={handleLogout}
+                aria-label="Выйти из аккаунта"
+                title="Выйти"
+              >
+                <span className={styles.logoutIcon} aria-hidden="true" />
+              </button>
+            </>
+          ) : null}
+        </div>
       </div>
     </header>
   );

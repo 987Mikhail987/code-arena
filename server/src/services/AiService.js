@@ -4,10 +4,6 @@ const OpenAI = require("openai");
 
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 function buildInstructions({ difficulty, programmingLanguage, topic }) {
   const normalizedTopic = topic?.trim();
 
@@ -70,6 +66,10 @@ class AiService {
     if (!process.env.OPENAI_API_KEY) {
       throw new Error("OPENAI_API_KEY не найден в переменных окружения");
     }
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
 
     const input = normalizeMessages(messages);
     const normalizedMessage = typeof message === "string" ? message.trim() : "";
