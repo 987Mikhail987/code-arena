@@ -29,6 +29,13 @@ class AiService {
       "Если пользователь просит показать решение, дать готовый код, решить задачу за него или написать полный ответ, откажись от полного решения.",
       "Вместо полного решения дай только направление, 1-2 подсказки по алгоритму, укажи на следующий шаг или предложи задачу полегче.",
       "Отвечай только на русском языке.",
+      "Всегда отвечай строго валидным JSON без markdown.",
+      'Формат: {"chatMessage":"string","task":null или {"description":"string","starterCode":"string","editorLanguage":"string"},"review":null или {"summary":"string","improvements":["string"],"score":number}}.',
+      "chatMessage показывается пользователю в чате.",
+      "task заполняй только если выдаешь новую задачу или новый стартовый код.",
+      "review заполняй только если анализируешь решение пользователя.",
+      "Никогда не давай полное готовое решение.",
+      "Если пользователь просит подсказку, дай направление, идею или 1-2 вопроса, но не готовый код.",
       "Структурируй ответ так: 1. Оценка решения. 2. Что улучшить. 3. Следующая задача.",
     ].join(" ");
   }
@@ -40,7 +47,9 @@ class AiService {
       `Начни тренировочное интервью для уровня ${difficulty}.`,
       `Язык: ${programmingLanguage}.`,
       normalizedTopic ? `Тема: ${normalizedTopic}.` : "",
-      "Сформулируй одну задачу и кратко опиши требования к решению.",
+      "Поздоровайся и выдай первую задачу.",
+      "Поле task обязательно должно быть заполнено.",
+      "Не давай готовое решение.",
     ]
       .filter(Boolean)
       .join(" ");
@@ -70,7 +79,15 @@ class AiService {
         ) {
           return {
             role: message.role === "ai" ? "assistant" : message.role,
-            content: message.content.trim(),
+            content: [
+              message.content.trim(),
+              message.metadata?.code
+                ? `\nКод пользователя:\n${message.metadata.code}`
+                : "",
+              message.metadata?.task?.description
+                ? `\nТекущая задача:\n${message.metadata.task.description}`
+                : "",
+            ].join(""),
           };
         }
 
@@ -114,6 +131,7 @@ class AiService {
       ) {
         throw new Error(
           "Неверный ключ авторизации GigaChat. Проверьте GIGACHAT_CREDENTIALS/GIGACHAT_API_KEY в .env: для gigachat нужен credentials-ключ, выданный в кабинете GigaChat.",
+          { cause: error },
         );
       }
 
@@ -121,6 +139,7 @@ class AiService {
         typeof providerError === "string"
           ? providerError
           : providerError?.message || "Ошибка запроса к GigaChat",
+        { cause: error },
       );
     }
 
@@ -165,8 +184,8 @@ class AiService {
         content: [
           "Ты помощник технического интервьюера.",
           "Определи, достаточно ли данных для основного ответа пользователю.",
-          "Если данных достаточно, ответь строго JSON: {\"needsClarification\": false}.",
-          "Если нужны уточнения, ответь строго JSON: {\"needsClarification\": true, \"clarificationQuestion\": \"...\"}.",
+          'Если данных достаточно, ответь строго JSON: {"needsClarification": false}.',
+          'Если нужны уточнения, ответь строго JSON: {"needsClarification": true, "clarificationQuestion": "..."}.',
           "Если в истории уже есть задача, решение пользователя или код, обычно данных достаточно.",
           "Не добавляй пояснений вне JSON.",
         ].join(" "),
@@ -186,6 +205,53 @@ class AiService {
     return this.parseClarificationResponse(answer);
   }
 
+  static extractJson(text) {
+    const normalized = text.trim();
+
+    try {
+      return JSON.parse(normalized);
+    } catch {
+      const match = normalized.match(/\{[\s\S]*\}/);
+
+      if (!match) {
+        throw new Error("AI не вернул JSON");
+      }
+
+      return JSON.parse(match[0]);
+    }
+  }
+
+  static parseAiResponse(answer, programmingLanguage) {
+    try {
+      const parsed = this.extractJson(answer);
+
+      const chatMessage = String(
+        parsed.chatMessage || parsed.answer || "",
+      ).trim();
+
+      return {
+        answer: chatMessage || answer.trim(),
+        metadata: {
+          task: parsed.task
+            ? {
+                description: String(parsed.task.description || "").trim(),
+                starterCode: String(parsed.task.starterCode || "").trim(),
+                editorLanguage: String(
+                  parsed.task.editorLanguage || programmingLanguage,
+                ).trim(),
+              }
+            : null,
+          review: parsed.review || null,
+        },
+      };
+    } catch {
+      return {
+        answer: answer.trim(),
+        metadata: null,
+      };
+    }
+  }
+
   static async getAiAnswer({
     difficulty,
     programmingLanguage,
@@ -200,13 +266,16 @@ class AiService {
       normalizedMessages.length === 0 && normalizedMessage.length === 0;
 
     if (!isFirstRequest) {
-      const clarificationDecision = await this.getClarificationDecision(client, {
-        difficulty,
-        programmingLanguage,
-        topic,
-        message,
-        messages,
-      });
+      const clarificationDecision = await this.getClarificationDecision(
+        client,
+        {
+          difficulty,
+          programmingLanguage,
+          topic,
+          message,
+          messages,
+        },
+      );
 
       if (
         clarificationDecision?.needsClarification &&
@@ -250,9 +319,39 @@ class AiService {
 
     const answer = await this.requestChat(client, chatMessages);
 
-    return {
-      answer,
-    };
+    return this.parseAiResponse(answer, programmingLanguage);
+  }
+
+  static async getInterviewResult({
+    difficulty,
+    programmingLanguage,
+    topic,
+    messages,
+  }) {
+    const client = this.createClient();
+
+    const answer = await this.requestChat(client, [
+      {
+        role: "system",
+        content: [
+          "Ты технический интервьюер.",
+          "Сформируй финальный результат интервью.",
+          "Ответь строго JSON без markdown.",
+          'Формат: {"summary":"string","score":number,"strengths":["string"],"weaknesses":["string"],"recommendations":["string"]}.',
+        ].join(" "),
+      },
+      {
+        role: "user",
+        content: JSON.stringify({
+          difficulty,
+          programmingLanguage,
+          topic,
+          messages: this.normalizeMessages(messages),
+        }),
+      },
+    ]);
+
+    return this.extractJson(answer);
   }
 
   static async generateInterviewFeedback({

@@ -1,7 +1,10 @@
 "use client";
 
 import SessionApi from "@/entities/session/api/sessionApi";
-import type { SessionStatusType } from "@/entities/session/model/types";
+import type {
+  SessionStatusType,
+  SessionType,
+} from "@/entities/session/model/types";
 import Chat from "@/widgets/ChatwithAi/ChatwithAi";
 import Redactor from "@/widgets/Redactor/Redactor";
 import { useParams } from "next/navigation";
@@ -15,12 +18,15 @@ export default function RoomPage() {
   const [isFinishing, setIsFinishing] = useState(false);
   const [sessionError, setSessionError] = useState("");
   const [finishError, setFinishError] = useState("");
+  const [session, setSession] = useState<SessionType | null>(null);
+  const [editorCode, setEditorCode] = useState("");
   const [code, setCode] = useState("// Ваш код");
   const [feedback, setFeedback] = useState("");
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const isComplited = status === "complited";
-  const isRoomDisabled = isLoadingSession || Boolean(sessionError) || isComplited;
+  const isRoomDisabled =
+    isLoadingSession || Boolean(sessionError) || isComplited;
 
   useEffect(() => {
     let isMounted = true;
@@ -38,6 +44,7 @@ export default function RoomPage() {
         }
 
         if (response.statusCode === 200) {
+          setSession(response.data);
           setStatus(response.data.status);
           if (response.data.result?.feedback) {
             setFeedback(response.data.result.feedback);
@@ -48,7 +55,9 @@ export default function RoomPage() {
           return;
         }
 
-        setSessionError(response.error || response.message || "Не удалось загрузить интервью");
+        setSessionError(
+          response.error || response.message || "Не удалось загрузить интервью",
+        );
       } catch {
         if (isMounted) {
           setSessionError("Не удалось загрузить интервью");
@@ -66,6 +75,17 @@ export default function RoomPage() {
       isMounted = false;
     };
   }, [params.id]);
+
+  const taskMessage = session?.messages
+    ?.filter((message) => message.role === "assistant" || message.role === "ai")
+    .findLast((message) => message.metadata?.task);
+
+  const starterCode = taskMessage?.metadata?.task?.starterCode || "// Ваш код";
+
+  const editorLanguage =
+    taskMessage?.metadata?.task?.editorLanguage ||
+    session?.programming_language ||
+    "javascript";
 
   async function handleFinishInterview() {
     if (isComplited) {
@@ -85,17 +105,66 @@ export default function RoomPage() {
       });
 
       if (response.statusCode === 200) {
+        setSession(response.data);
+        setStatus(response.data.status);
         setStatus(response.data.session.status);
         setFeedback(response.data.feedback);
         setIsFeedbackOpen(true);
         return;
       }
 
-      setFinishError(response.error || response.message || "Не удалось завершить интервью");
+      setFinishError(
+        response.error || response.message || "Не удалось завершить интервью",
+      );
     } catch {
       setFinishError("Не удалось завершить интервью");
     } finally {
       setIsFinishing(false);
+    }
+  }
+
+  async function handleSendChatMessage(content: string) {
+    const response = await SessionApi.createMessage(params.id, {
+      content,
+      source: "chat",
+    });
+
+    if (response.statusCode === 201) {
+      setSession((prev) =>
+        prev
+          ? {
+              ...prev,
+              messages: [
+                ...(prev.messages ?? []),
+                response.data.userMessage,
+                response.data.assistantMessage,
+              ],
+            }
+          : prev,
+      );
+    }
+  }
+
+  async function handleSubmitCode(code: string) {
+    const response = await SessionApi.createMessage(params.id, {
+      content: "Проверь мое решение",
+      code,
+      source: "editor",
+    });
+
+    if (response.statusCode === 201) {
+      setSession((prev) =>
+        prev
+          ? {
+              ...prev,
+              messages: [
+                ...(prev.messages ?? []),
+                response.data.userMessage,
+                response.data.assistantMessage,
+              ],
+            }
+          : prev,
+      );
     }
   }
 
@@ -110,7 +179,12 @@ export default function RoomPage() {
           type="button"
           className={styles.finishButton}
           onClick={handleFinishInterview}
-          disabled={isLoadingSession || Boolean(sessionError) || isFinishing}
+          disabled={
+            isLoadingSession ||
+            Boolean(sessionError) ||
+            isFinishing ||
+            isComplited
+          }
         >
           {isLoadingSession
             ? "Загружаем..."
@@ -124,8 +198,18 @@ export default function RoomPage() {
       {sessionError ? <p className={styles.error}>{sessionError}</p> : null}
       {finishError ? <p className={styles.error}>{finishError}</p> : null}
       <div className={styles.workspace}>
-        <Chat disabled={isRoomDisabled} />
-        <Redactor disabled={isRoomDisabled} onChange={setCode} initialCode={code} />
+        <Chat
+          messages={session?.messages ?? []}
+          disabled={isRoomDisabled}
+          onSendMessage={handleSendChatMessage}
+        />
+        <Redactor
+          disabled={isRoomDisabled}
+          initialCode={starterCode}
+          language={editorLanguage}
+          onChange={setEditorCode}
+          onSubmitCode={handleSubmitCode}
+        />
       </div>
       {isFeedbackOpen ? (
         <div

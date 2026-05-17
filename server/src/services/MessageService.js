@@ -1,6 +1,13 @@
 const { Message, Session } = require("../db/models");
 
 class MessageService {
+  static async createSessionMessage(sessionId, messageData) {
+    return Message.create({
+      session_id: sessionId,
+      ...messageData,
+    });
+  }
+
   static async createMessage(sessionId, userId, messageData) {
     const session = await Session.findOne({
       where: {

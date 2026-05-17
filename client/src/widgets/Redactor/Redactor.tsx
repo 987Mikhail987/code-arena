@@ -1,8 +1,7 @@
 "use client";
 import { Editor } from "@monaco-editor/react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./Redactor.module.css";
-
 
 export type MonacoLanguage =
   | "javascript"
@@ -18,6 +17,7 @@ export type MonacoLanguage =
 export type CodeEditorProps = {
   initialCode?: string;
   onChange?: (code: string) => void;
+  onSubmitCode?: (code: string) => void;
   language?: MonacoLanguage;
   disabled?: boolean;
 };
@@ -26,12 +26,17 @@ export default function Redactor({
   initialCode = "// Ваш код",
   language = "javascript",
   onChange,
+  onSubmitCode,
   disabled = false,
 }: CodeEditorProps) {
   const [code, setCode] = useState(initialCode);
   const [terminalMessage, setTerminalMessage] = useState(
     "Терминал готов к запуску.",
   );
+
+  useEffect(() => {
+    setCode(initialCode);
+  }, [initialCode]);
 
   const handleEditorChange = (value: string | undefined) => {
     if (!disabled && value !== undefined) {
@@ -45,7 +50,8 @@ export default function Redactor({
       return;
     }
 
-    setTerminalMessage("Код отправлен на проверку. Логика появится позже.");
+    onSubmitCode?.(code);
+    setTerminalMessage("Код отправлен на проверку.");
   };
 
   return (

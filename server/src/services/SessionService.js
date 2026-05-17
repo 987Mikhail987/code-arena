@@ -39,7 +39,7 @@ class SessionService {
     });
   }
 
-  static async finishSession(sessionId, userId) {
+  static async finishSession(sessionId, userId, result) {
     const session = await Session.findOne({
       where: {
         id: sessionId,
@@ -56,6 +56,7 @@ class SessionService {
     }
 
     session.status = "complited";
+    session.result = result;
     await session.save();
 
     return session;

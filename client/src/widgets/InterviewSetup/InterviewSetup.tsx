@@ -2,19 +2,13 @@
 import SessionApi from "@/entities/session/api/sessionApi";
 import { useState } from "react";
 import styles from "./InterviewSetup.module.css";
-import type { InterviewType } from "@/entities/session/model/types";
+import type {
+  InterviewType,
+  ProgrammingLanguageType,
+} from "@/entities/session/model/types";
 
 type DifficultyLevelType = "junior" | "middle" | "senior";
-type LanguageType =
-  | "javascript"
-  | "typescript"
-  | "python"
-  | "go"
-  | "html"
-  | "css"
-  | "java"
-  | "c"
-  | "csharp";
+
 type InterviewSetupPropsType = {
   interviewType: InterviewType;
   onStart: (interviewId: string) => void;
@@ -28,7 +22,8 @@ export function InterviewSetup({
 }: InterviewSetupPropsType) {
   const [level, setLevel] = useState<DifficultyLevelType>("junior");
   const [topic, setTopic] = useState("");
-  const [language, setLanguage] = useState<LanguageType>("javascript");
+  const [language, setLanguage] =
+    useState<ProgrammingLanguageType>("javascript");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleStart = async () => {
@@ -37,10 +32,10 @@ export function InterviewSetup({
       const interview = await SessionApi.createSession({
         type: interviewType,
         level,
-        topic: topic ? topic : "рандом",
+        topic: topic ? topic : "реальное собеседование",
+        programmingLanguage: language,
       });
-
-      if (interview.data?.id) {
+      if (interview.statusCode === 201) {
         onStart(interview.data.id);
       }
     } catch (error) {
@@ -60,30 +55,30 @@ export function InterviewSetup({
         <h2>Настройки интервью</h2>
         <p>Тип: {interviewType === "ai" ? "AI Интервью" : "Живое интервью"}</p>
 
-
         <div className={styles.field}>
           <label htmlFor="level">Сложность интервью</label>
 
-        <select
-          id="level"
-          value={level}
-          onChange={(event) =>
-            setLevel(event.target.value as DifficultyLevelType)
-          }
-        >
-          <option value="junior">junior</option>
-          <option value="middle">middle</option>
-          <option value="senior">senior</option>
-        </select>
-</div>
-
+          <select
+            id="level"
+            value={level}
+            onChange={(event) =>
+              setLevel(event.target.value as DifficultyLevelType)
+            }
+          >
+            <option value="junior">junior</option>
+            <option value="middle">middle</option>
+            <option value="senior">senior</option>
+          </select>
+        </div>
 
         <div className={styles.field}>
           <label htmlFor="language">Выбор языка</label>
           <select
             id="language"
             value={language}
-            onChange={(event) => setLanguage(event.target.value as LanguageType)}
+            onChange={(event) =>
+              setLanguage(event.target.value as ProgrammingLanguageType)
+            }
           >
             <option value="javascript">javascript</option>
             <option value="typescript">typescript</option>
