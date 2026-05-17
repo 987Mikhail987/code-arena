@@ -1,7 +1,6 @@
 const AiService = require("../services/AiService");
 const MessageService = require("../services/MessageService");
 const SessionService = require("../services/SessionService");
-const AiService = require("../services/AiService");
 const formatResponse = require("../utils/formatResponse");
 
 const SESSION_TYPES = ["ai", "live"];
@@ -18,11 +17,24 @@ const PROGRAMMING_LANGUAGES = [
   "csharp",
 ];
 
+function buildFallbackFirstMessage(level, programmingLanguage, topic) {
+  return [
+    "Привет! Начинаем тренировочное интервью.",
+    `Уровень: ${level}.`,
+    `Язык программирования: ${programmingLanguage}.`,
+    topic ? `Тема: ${topic}.` : "",
+    "Первая задача:",
+    "Опиши, как бы ты решил задачу по выбранной теме, и затем напиши рабочее решение в редакторе.",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
 class SessionController {
   static async createSession(req, res) {
     const { user } = res.locals;
-    const { content, level, type = "ai", programmingLanguage } = req.body;
-    const topic = req.body.topic ?? content;
+    const { content, level, type = "ai", programmingLanguage } = req.body || {};
+    const topic = req.body?.topic ?? content;
 
     if (!topic || typeof topic !== "string" || topic.trim().length === 0) {
       return res
@@ -63,15 +75,13 @@ class SessionController {
       const activeSession = await SessionService.getActiveSession(user.id);
 
       if (activeSession) {
-        return res
-          .status(409)
-          .json(
-            formatResponse(
-              409,
-              "Сначала завершите активное интервью",
-              activeSession,
-            ),
-          );
+        return res.status(409).json(
+          formatResponse(
+            409,
+            "Сначала завершите активное интервью",
+            activeSession,
+          ),
+        );
       }
 
       const session = await SessionService.createSession({
@@ -84,18 +94,36 @@ class SessionController {
       });
 
       let firstMessage = null;
-      if (type === "ai") {
-        const aiData = await AiService.getAiAnswer({
-          difficulty: level,
-          programmingLanguage,
-          topic: topic.trim(),
-        });
 
-        firstMessage = await MessageService.createSessionMessage(session.id, {
-          role: "assistant",
-          content: aiData.answer,
-          metadata: aiData.metadata,
-        });
+      if (type === "ai") {
+        let aiData;
+
+        try {
+          aiData = await AiService.getAiAnswer({
+            difficulty: level,
+            programmingLanguage,
+            topic: topic.trim(),
+          });
+
+          firstMessage = await MessageService.createSessionMessage(session.id, {
+            role: "assistant",
+            content: aiData.answer,
+            metadata: aiData.metadata || null,
+          });
+        } catch (aiError) {
+          console.log("======== SessionController.createSession.ai =========");
+          console.log(aiError);
+
+          firstMessage = await MessageService.createSessionMessage(session.id, {
+            role: "assistant",
+            content: buildFallbackFirstMessage(
+              level,
+              programmingLanguage,
+              topic.trim(),
+            ),
+            metadata: null,
+          });
+        }
       }
 
       return res.status(201).json(
@@ -121,13 +149,7 @@ class SessionController {
 
       return res
         .status(200)
-        .json(
-          formatResponse(
-            200,
-            "История тренировочных сессий получена",
-            sessions,
-          ),
-        );
+        .json(formatResponse(200, "История тренировочных сессий получена", sessions));
     } catch (error) {
       console.log("======== SessionController.getUserSessions =========");
       console.log(error);
@@ -148,10 +170,7 @@ class SessionController {
     }
 
     try {
-      const session = await SessionService.getUserSessionById(
-        sessionId,
-        user.id,
-      );
+      const session = await SessionService.getUserSessionById(sessionId, user.id);
 
       if (!session) {
         return res
@@ -174,7 +193,7 @@ class SessionController {
   static async finishSession(req, res) {
     const { user } = res.locals;
     const { sessionId } = req.params;
-    const { code = "", programmingLanguage = "javascript" } = req.body || {};
+    const { code = "", programmingLanguage } = req.body || {};
 
     if (Number.isNaN(Number(sessionId))) {
       return res
@@ -191,14 +210,6 @@ class SessionController {
           .json(formatResponse(404, "Тренировочная сессия не найдена"));
       }
 
-      const result = await AiService.getInterviewResult({
-        difficulty: session.level,
-        programmingLanguage: session.programming_language,
-        topic: session.topic,
-        messages: session.messages,
-      });
-
-      const finishedSession = await SessionService.finishSession(
       if (session.status === "complited") {
         return res.status(200).json(
           formatResponse(200, "Тренировочная сессия завершена", {
@@ -212,27 +223,36 @@ class SessionController {
         id: message.id,
         role: message.role,
         content: message.content,
+        metadata: message.metadata || null,
         createdAt: message.createdAt,
       }));
 
+      const result = await AiService.getInterviewResult({
+        difficulty: session.level,
+        programmingLanguage:
+          session.programming_language || programmingLanguage || "javascript",
+        topic: session.topic,
+        messages: resultMessages,
+      });
+
       const feedback = await AiService.generateInterviewFeedback({
         difficulty: session.level,
-        programmingLanguage,
+        programmingLanguage:
+          session.programming_language || programmingLanguage || "javascript",
         topic: session.topic,
         messages: resultMessages,
         code,
       });
 
-      const result = {
-        messages: resultMessages,
-        code: typeof code === "string" ? code : "",
-        feedback,
-      };
-
-      const finishedSession = await SessionService.saveSessionResult(
+      const finishedSession = await SessionService.finishSession(
         sessionId,
         user.id,
-        result,
+        {
+          summary: result,
+          messages: resultMessages,
+          code: typeof code === "string" ? code : "",
+          feedback,
+        },
       );
 
       return res.status(200).json(
@@ -253,7 +273,7 @@ class SessionController {
   static async createMessage(req, res) {
     const { user } = res.locals;
     const { sessionId } = req.params;
-    const { content = "", code = "", source = "chat" } = req.body;
+    const { content = "", code = "", source = "chat" } = req.body || {};
 
     if (Number.isNaN(Number(sessionId))) {
       return res
@@ -268,18 +288,14 @@ class SessionController {
     }
 
     try {
-      const userMessage = await MessageService.createMessage(
-        sessionId,
-        user.id,
-        {
-          role: "user",
-          content: content.trim() || "Проверь мое решение",
-          metadata: {
-            source,
-            code: code.trim() || null,
-          },
+      const userMessage = await MessageService.createMessage(sessionId, user.id, {
+        role: "user",
+        content: content.trim() || "Проверь моё решение",
+        metadata: {
+          source,
+          code: code.trim() || null,
         },
-      );
+      });
 
       if (!userMessage) {
         return res
@@ -292,10 +308,15 @@ class SessionController {
           .status(409)
           .json(formatResponse(409, "Тренировочная сессия уже завершена"));
       }
-      const session = await SessionService.getUserSessionById(
-        sessionId,
-        user.id,
-      );
+
+      const session = await SessionService.getUserSessionById(sessionId, user.id);
+
+      if (!session) {
+        return res
+          .status(404)
+          .json(formatResponse(404, "Тренировочная сессия не найдена"));
+      }
+
       const aiData = await AiService.getAiAnswer({
         difficulty: session.level,
         programmingLanguage: session.programming_language,
@@ -303,14 +324,12 @@ class SessionController {
         messages: session.messages,
       });
 
-      const assistantMessage = await MessageService.createSessionMessage(
-        sessionId,
-        {
-          role: "assistant",
-          content: aiData.answer,
-          metadata: aiData.metadata,
-        },
-      );
+      const assistantMessage = await MessageService.createSessionMessage(sessionId, {
+        role: "assistant",
+        content: aiData.answer,
+        metadata: aiData.metadata || null,
+      });
+
       return res.status(201).json(
         formatResponse(201, "Сообщение обработано", {
           userMessage,

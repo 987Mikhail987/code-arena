@@ -12,27 +12,6 @@ export type ProgrammingLanguageType =
   | "c"
   | "csharp";
 
-export type SessionType = {
-  id: string;
-  user_id?: number;
-  userId?: string;
-  type: InterviewType;
-  level?: DifficultyType;
-  topic: string;
-  status: SessionStatusType;
-  level?: DifficultyType;
-  programming_language?: ProgrammingLanguageType;
-  programmingLanguage?: ProgrammingLanguageType;
-  messages?: MessageType[];
-  result?: unknown;
-  createdAt: string;
-  result?: {
-    messages: MessageType[];
-    code: string;
-    feedback: string;
-  };
-};
-
 export type MessageMetadataType = {
   source?: "chat" | "editor";
   code?: string | null;
@@ -55,6 +34,27 @@ export type MessageType = {
   role: "user" | "assistant" | "ai" | "system";
   content: string;
   metadata?: MessageMetadataType | null;
+  createdAt: string;
+};
+
+export type SessionResultType = {
+  messages: MessageType[];
+  code: string;
+  feedback: string;
+};
+
+export type SessionType = {
+  id: string;
+  user_id?: number;
+  userId?: string;
+  type: InterviewType;
+  level?: DifficultyType;
+  topic: string;
+  status: SessionStatusType;
+  programming_language?: ProgrammingLanguageType;
+  programmingLanguage?: ProgrammingLanguageType;
+  messages?: MessageType[];
+  result?: SessionResultType;
   createdAt: string;
 };
 

@@ -8,25 +8,24 @@ import type {
 import Chat from "@/widgets/ChatwithAi/ChatwithAi";
 import Redactor from "@/widgets/Redactor/Redactor";
 import { useParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import styles from "./page.module.css";
 
 export default function RoomPage() {
   const params = useParams<{ id: string }>();
+  const [session, setSession] = useState<SessionType | null>(null);
   const [status, setStatus] = useState<SessionStatusType>("active");
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [isFinishing, setIsFinishing] = useState(false);
   const [sessionError, setSessionError] = useState("");
   const [finishError, setFinishError] = useState("");
-  const [session, setSession] = useState<SessionType | null>(null);
-  const [editorCode, setEditorCode] = useState("");
-  const [code, setCode] = useState("// Ваш код");
+  const [editorCode, setEditorCode] = useState("// Ваш код");
   const [feedback, setFeedback] = useState("");
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const isComplited = status === "complited";
   const isRoomDisabled =
-    isLoadingSession || Boolean(sessionError) || isComplited;
+    isLoadingSession || Boolean(sessionError) || isFinishing || isComplited;
 
   useEffect(() => {
     let isMounted = true;
@@ -46,12 +45,15 @@ export default function RoomPage() {
         if (response.statusCode === 200) {
           setSession(response.data);
           setStatus(response.data.status);
+
           if (response.data.result?.feedback) {
             setFeedback(response.data.result.feedback);
           }
+
           if (response.data.result?.code) {
-            setCode(response.data.result.code);
+            setEditorCode(response.data.result.code);
           }
+
           return;
         }
 
@@ -76,11 +78,16 @@ export default function RoomPage() {
     };
   }, [params.id]);
 
-  const taskMessage = session?.messages
-    ?.filter((message) => message.role === "assistant" || message.role === "ai")
-    .findLast((message) => message.metadata?.task);
+  const taskMessage = useMemo(() => {
+    return session?.messages
+      ?.filter((message) => message.role === "assistant" || message.role === "ai")
+      .findLast((message) => message.metadata?.task);
+  }, [session]);
 
-  const starterCode = taskMessage?.metadata?.task?.starterCode || "// Ваш код";
+  const starterCode =
+    session?.result?.code ||
+    taskMessage?.metadata?.task?.starterCode ||
+    "// Ваш код";
 
   const editorLanguage =
     taskMessage?.metadata?.task?.editorLanguage ||
@@ -100,13 +107,12 @@ export default function RoomPage() {
 
     try {
       const response = await SessionApi.finishSession(params.id, {
-        code,
-        programmingLanguage: "javascript",
+        code: editorCode,
+        programmingLanguage: editorLanguage,
       });
 
       if (response.statusCode === 200) {
-        setSession(response.data);
-        setStatus(response.data.status);
+        setSession(response.data.session);
         setStatus(response.data.session.status);
         setFeedback(response.data.feedback);
         setIsFeedbackOpen(true);
@@ -129,43 +135,55 @@ export default function RoomPage() {
       source: "chat",
     });
 
-    if (response.statusCode === 201) {
-      setSession((prev) =>
-        prev
-          ? {
-              ...prev,
-              messages: [
-                ...(prev.messages ?? []),
-                response.data.userMessage,
-                response.data.assistantMessage,
-              ],
-            }
-          : prev,
+    if (response.statusCode !== 201) {
+      setFinishError(
+        response.error || response.message || "Не удалось отправить сообщение",
       );
+      return;
     }
+
+    setSession((prev) =>
+      prev
+        ? {
+            ...prev,
+            messages: [
+              ...(prev.messages ?? []),
+              response.data.userMessage,
+              response.data.assistantMessage,
+            ],
+          }
+        : prev,
+    );
   }
 
   async function handleSubmitCode(code: string) {
+    setEditorCode(code);
+
     const response = await SessionApi.createMessage(params.id, {
-      content: "Проверь мое решение",
+      content: "Проверь моё решение",
       code,
       source: "editor",
     });
 
-    if (response.statusCode === 201) {
-      setSession((prev) =>
-        prev
-          ? {
-              ...prev,
-              messages: [
-                ...(prev.messages ?? []),
-                response.data.userMessage,
-                response.data.assistantMessage,
-              ],
-            }
-          : prev,
+    if (response.statusCode !== 201) {
+      setFinishError(
+        response.error || response.message || "Не удалось отправить код",
       );
+      return;
     }
+
+    setSession((prev) =>
+      prev
+        ? {
+            ...prev,
+            messages: [
+              ...(prev.messages ?? []),
+              response.data.userMessage,
+              response.data.assistantMessage,
+            ],
+          }
+        : prev,
+    );
   }
 
   return (
@@ -179,12 +197,7 @@ export default function RoomPage() {
           type="button"
           className={styles.finishButton}
           onClick={handleFinishInterview}
-          disabled={
-            isLoadingSession ||
-            Boolean(sessionError) ||
-            isFinishing ||
-            isComplited
-          }
+          disabled={isLoadingSession || Boolean(sessionError) || isFinishing}
         >
           {isLoadingSession
             ? "Загружаем..."
@@ -195,8 +208,10 @@ export default function RoomPage() {
                 : "Завершить интервью"}
         </button>
       </section>
+
       {sessionError ? <p className={styles.error}>{sessionError}</p> : null}
       {finishError ? <p className={styles.error}>{finishError}</p> : null}
+
       <div className={styles.workspace}>
         <Chat
           messages={session?.messages ?? []}
@@ -211,6 +226,7 @@ export default function RoomPage() {
           onSubmitCode={handleSubmitCode}
         />
       </div>
+
       {isFeedbackOpen ? (
         <div
           style={{

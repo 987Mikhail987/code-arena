@@ -4,7 +4,7 @@ const formatResponse = require("../utils/formatResponse");
 class AiController {
   static async getAiAnswer(req, res) {
     const { difficulty, programmingLanguage, topic, message, messages } =
-      req.body;
+      req.body || {};
 
     const allowedDifficulties = ["junior", "middle", "senior"];
 
