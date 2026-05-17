@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       const hasUpperCase = /[A-Z]/;
       const hasLowerCase = /[a-z]/;
       const hasDigits = /\d/;
-      const hasSpecialSymbols = /[!@#$%^&*()-+,.\""<>{}]/;
+      const hasSpecialSymbols = /[!@#$%^&*()-+,.""<>{}]/;
       const isValidLength = password.length >= 8;
 
       return (

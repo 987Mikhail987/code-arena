@@ -1,20 +1,15 @@
 "use client";
+
 import SessionApi from "@/entities/session/api/sessionApi";
 import { useState } from "react";
 import styles from "./InterviewSetup.module.css";
-import type { InterviewType } from "@/entities/session/model/types";
+import type {
+  InterviewType,
+  ProgrammingLanguageType,
+} from "@/entities/session/model/types";
 
 type DifficultyLevelType = "junior" | "middle" | "senior";
-type LanguageType =
-  | "javascript"
-  | "typescript"
-  | "python"
-  | "go"
-  | "html"
-  | "css"
-  | "java"
-  | "c"
-  | "csharp";
+
 type InterviewSetupPropsType = {
   interviewType: InterviewType;
   onStart: (interviewId: string) => void;
@@ -28,21 +23,39 @@ export function InterviewSetup({
 }: InterviewSetupPropsType) {
   const [level, setLevel] = useState<DifficultyLevelType>("junior");
   const [topic, setTopic] = useState("");
-  const [language, setLanguage] = useState<LanguageType>("javascript");
+  const [language, setLanguage] =
+    useState<ProgrammingLanguageType>("javascript");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleStart = async () => {
     setIsLoading(true);
+    setError("");
+
     try {
       const interview = await SessionApi.createSession({
         type: interviewType,
         level,
-        topic: topic || "Реальное собеседование",
+        topic: topic.trim() ? topic.trim() : "Тренировочное интервью",
+        programmingLanguage: language,
       });
-      console.log("Полный ответ от API:", interview);
-      onStart(interview.data.id);
-    } catch (error) {
-      console.error("Ошибка создания интервью:", error);
+
+      if (interview.statusCode === 201 && interview.data?.id) {
+        onStart(interview.data.id);
+        return;
+      }
+
+      if (interview.statusCode === 409 && interview.data?.id) {
+        onStart(interview.data.id);
+        return;
+      }
+
+      setError(
+        interview.error || interview.message || "Не удалось начать интервью",
+      );
+    } catch (currentError) {
+      console.error("Ошибка создания интервью:", currentError);
+      setError("Не удалось начать интервью");
     } finally {
       setIsLoading(false);
     }
@@ -56,32 +69,32 @@ export function InterviewSetup({
 
       <div className={styles.card}>
         <h2>Настройки интервью</h2>
-        <p>Тип: {interviewType === "ai" ? "AI Интервью" : "Живое интервью"}</p>
-
+        <p>Тип: {interviewType === "ai" ? "AI интервью" : "Живое интервью"}</p>
 
         <div className={styles.field}>
           <label htmlFor="level">Сложность интервью</label>
 
-        <select
-          id="level"
-          value={level}
-          onChange={(event) =>
-            setLevel(event.target.value as DifficultyLevelType)
-          }
-        >
-          <option value="junior">junior</option>
-          <option value="middle">middle</option>
-          <option value="senior">senior</option>
-        </select>
-</div>
-
+          <select
+            id="level"
+            value={level}
+            onChange={(event) =>
+              setLevel(event.target.value as DifficultyLevelType)
+            }
+          >
+            <option value="junior">junior</option>
+            <option value="middle">middle</option>
+            <option value="senior">senior</option>
+          </select>
+        </div>
 
         <div className={styles.field}>
           <label htmlFor="language">Выбор языка</label>
           <select
             id="language"
             value={language}
-            onChange={(event) => setLanguage(event.target.value as LanguageType)}
+            onChange={(event) =>
+              setLanguage(event.target.value as ProgrammingLanguageType)
+            }
           >
             <option value="javascript">javascript</option>
             <option value="typescript">typescript</option>
@@ -105,6 +118,8 @@ export function InterviewSetup({
             placeholder="Например React"
           />
         </div>
+
+        {error ? <p>{error}</p> : null}
       </div>
 
       <button

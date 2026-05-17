@@ -5,6 +5,7 @@ import type {
   MessageType,
   CreateSessionParamsType,
   CreateMessageParamsType,
+  CreateMessageResponseType,
 } from "../model/types";
 
 type ApiResponse<T> = {
@@ -17,7 +18,7 @@ type ApiResponse<T> = {
 export default class SessionApi {
   static async createSession(
     params: CreateSessionParamsType,
-  ): Promise<ApiResponse<SessionType>> {
+  ):Promise<ApiResponse<SessionType>> {
     try {
       const response = await axiosInstance.post("/sessions", params);
       return response.data;
@@ -57,11 +58,10 @@ export default class SessionApi {
 
   static async finishSession(
     sessionId: string,
-  ): Promise<ApiResponse<SessionType>> {
+    params: { code: string; programmingLanguage: string },
+  ): Promise<ApiResponse<{ session: SessionType; feedback: string }>> {
     try {
-      const response = await axiosInstance.patch(
-        `/sessions/${sessionId}/finish`,
-      );
+      const response = await axiosInstance.patch(`/sessions/${sessionId}/finish`, params);
       return response.data;
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response) {
@@ -74,7 +74,7 @@ export default class SessionApi {
   static async createMessage(
     sessionId: string,
     params: CreateMessageParamsType,
-  ): Promise<ApiResponse<MessageType>> {
+  ): Promise<ApiResponse<CreateMessageResponseType>> {
     try {
       const response = await axiosInstance.post(
         `/sessions/${sessionId}/messages`,

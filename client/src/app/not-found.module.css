@@ -1,0 +1,66 @@
+.notFoundPage {
+  padding: 28px 0 0;
+}
+
+.card {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 520px;
+  object-fit: cover;
+}
+
+.content {
+  display: grid;
+  gap: 12px;
+  padding: 28px;
+}
+
+.kicker {
+  margin: 0;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.content h1 {
+  margin: 0;
+  font-size: clamp(28px, 5vw, 52px);
+  line-height: 1;
+}
+
+.content p {
+  margin: 0;
+  color: var(--foreground-muted);
+  line-height: 1.6;
+}
+
+.homeLink {
+  width: fit-content;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  padding: 0 18px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff7f4;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding: 22px;
+  }
+}
