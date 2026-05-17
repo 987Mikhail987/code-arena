@@ -1,4 +1,5 @@
 "use client";
+
 import SessionApi from "@/entities/session/api/sessionApi";
 import { useState } from "react";
 import styles from "./InterviewSetup.module.css";
@@ -25,21 +26,36 @@ export function InterviewSetup({
   const [language, setLanguage] =
     useState<ProgrammingLanguageType>("javascript");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleStart = async () => {
     setIsLoading(true);
+    setError("");
+
     try {
       const interview = await SessionApi.createSession({
         type: interviewType,
         level,
-        topic: topic ? topic : "реальное собеседование",
+        topic: topic.trim() ? topic.trim() : "Тренировочное интервью",
         programmingLanguage: language,
       });
-      if (interview.statusCode === 201) {
+
+      if (interview.statusCode === 201 && interview.data?.id) {
         onStart(interview.data.id);
+        return;
       }
-    } catch (error) {
-      console.error("Ошибка создания интервью:", error);
+
+      if (interview.statusCode === 409 && interview.data?.id) {
+        onStart(interview.data.id);
+        return;
+      }
+
+      setError(
+        interview.error || interview.message || "Не удалось начать интервью",
+      );
+    } catch (currentError) {
+      console.error("Ошибка создания интервью:", currentError);
+      setError("Не удалось начать интервью");
     } finally {
       setIsLoading(false);
     }
@@ -53,7 +69,7 @@ export function InterviewSetup({
 
       <div className={styles.card}>
         <h2>Настройки интервью</h2>
-        <p>Тип: {interviewType === "ai" ? "AI Интервью" : "Живое интервью"}</p>
+        <p>Тип: {interviewType === "ai" ? "AI интервью" : "Живое интервью"}</p>
 
         <div className={styles.field}>
           <label htmlFor="level">Сложность интервью</label>
@@ -102,6 +118,8 @@ export function InterviewSetup({
             placeholder="Например React"
           />
         </div>
+
+        {error ? <p>{error}</p> : null}
       </div>
 
       <button
