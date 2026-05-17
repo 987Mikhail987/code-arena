@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
       session_id: DataTypes.INTEGER,
       role: DataTypes.TEXT,
       content: DataTypes.TEXT,
+      metadata: DataTypes.JSONB,
     },
     {
       sequelize,

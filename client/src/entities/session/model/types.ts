@@ -14,20 +14,41 @@ export type ProgrammingLanguageType =
 
 export type SessionType = {
   id: string;
-  userId: string;
+  user_id?: number;
+  userId?: string;
   type: InterviewType;
   topic: string;
   status: SessionStatusType;
+  level?: DifficultyType;
+  programming_language?: ProgrammingLanguageType;
   programmingLanguage?: ProgrammingLanguageType;
+  messages?: MessageType[];
+  result?: unknown;
   createdAt: string;
+};
+
+export type MessageMetadataType = {
+  source?: "chat" | "editor";
+  code?: string | null;
+  task?: {
+    description?: string;
+    starterCode?: string;
+    editorLanguage?: ProgrammingLanguageType;
+  } | null;
+  review?: {
+    summary?: string;
+    improvements?: string[];
+    score?: number;
+  } | null;
 };
 
 export type MessageType = {
   id: string;
-  sessionId: string;
-  role: "user" | "ai" | "system";
+  session_id?: number;
+  sessionId?: string;
+  role: "user" | "assistant" | "ai" | "system";
   content: string;
-  code?: string;
+  metadata?: MessageMetadataType | null;
   createdAt: string;
 };
 
@@ -39,6 +60,12 @@ export type CreateSessionParamsType = {
 };
 
 export type CreateMessageParamsType = {
-  content: string;
+  content?: string;
   code?: string;
+  source?: "chat" | "editor";
+};
+
+export type CreateMessageResponseType = {
+  userMessage: MessageType;
+  assistantMessage: MessageType;
 };
