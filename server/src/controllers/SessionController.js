@@ -1,3 +1,4 @@
+const AiService = require("../services/AiService");
 const MessageService = require("../services/MessageService");
 const SessionService = require("../services/SessionService");
 const AiService = require("../services/AiService");
@@ -173,6 +174,7 @@ class SessionController {
   static async finishSession(req, res) {
     const { user } = res.locals;
     const { sessionId } = req.params;
+    const { code = "", programmingLanguage = "javascript" } = req.body || {};
 
     if (Number.isNaN(Number(sessionId))) {
       return res
@@ -197,15 +199,48 @@ class SessionController {
       });
 
       const finishedSession = await SessionService.finishSession(
+      if (session.status === "complited") {
+        return res.status(200).json(
+          formatResponse(200, "Тренировочная сессия завершена", {
+            session,
+            feedback: session.result?.feedback || "",
+          }),
+        );
+      }
+
+      const resultMessages = (session.messages || []).map((message) => ({
+        id: message.id,
+        role: message.role,
+        content: message.content,
+        createdAt: message.createdAt,
+      }));
+
+      const feedback = await AiService.generateInterviewFeedback({
+        difficulty: session.level,
+        programmingLanguage,
+        topic: session.topic,
+        messages: resultMessages,
+        code,
+      });
+
+      const result = {
+        messages: resultMessages,
+        code: typeof code === "string" ? code : "",
+        feedback,
+      };
+
+      const finishedSession = await SessionService.saveSessionResult(
         sessionId,
         user.id,
         result,
       );
 
-
-      return res
-        .status(200)
-        .json(formatResponse(200, "Тренировочная сессия завершена", finishedSession));
+      return res.status(200).json(
+        formatResponse(200, "Тренировочная сессия завершена", {
+          session: finishedSession,
+          feedback,
+        }),
+      );
     } catch (error) {
       console.log("======== SessionController.finishSession =========");
       console.log(error);

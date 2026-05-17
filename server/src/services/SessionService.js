@@ -61,6 +61,25 @@ class SessionService {
 
     return session;
   }
+
+  static async saveSessionResult(sessionId, userId, result) {
+    const session = await Session.findOne({
+      where: {
+        id: sessionId,
+        user_id: userId,
+      },
+    });
+
+    if (!session) {
+      return null;
+    }
+
+    session.result = result;
+    session.status = "complited";
+    await session.save();
+
+    return session;
+  }
 }
 
 module.exports = SessionService;

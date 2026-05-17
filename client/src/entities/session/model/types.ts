@@ -17,6 +17,7 @@ export type SessionType = {
   user_id?: number;
   userId?: string;
   type: InterviewType;
+  level?: DifficultyType;
   topic: string;
   status: SessionStatusType;
   level?: DifficultyType;
@@ -25,6 +26,11 @@ export type SessionType = {
   messages?: MessageType[];
   result?: unknown;
   createdAt: string;
+  result?: {
+    messages: MessageType[];
+    code: string;
+    feedback: string;
+  };
 };
 
 export type MessageMetadataType = {

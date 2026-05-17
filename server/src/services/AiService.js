@@ -353,6 +353,52 @@ class AiService {
 
     return this.extractJson(answer);
   }
+
+  static async generateInterviewFeedback({
+    difficulty,
+    programmingLanguage,
+    topic,
+    messages,
+    code,
+  }) {
+    const client = this.createClient();
+
+    const transcript = (messages || [])
+      .map((message) => `${message.role}: ${message.content}`)
+      .join("\n\n");
+
+    const answer = await this.requestChat(client, [
+      {
+        role: "system",
+        content: [
+          "Ты технический интервьюер для учебного приложения CodeArena.",
+          "Тебе нужно дать итоговый feedback по завершённому интервью.",
+          "Проанализируй все сообщения интервью и код пользователя.",
+          "Скажи, прошел бы пользователь интервью или нет.",
+          "Укажи сильные стороны ответа.",
+          "Укажи, что можно улучшить в коде, алгоритме и рассуждениях.",
+          "Укажи, какие темы стоит повторить.",
+          "Отвечай только на русском языке.",
+          "Структурируй ответ так: 1. Итог. 2. Что получилось хорошо. 3. Что улучшить.",
+        ].join(" "),
+      },
+      {
+        role: "user",
+        content: [
+          `Уровень интервью: ${difficulty}.`,
+          `Язык программирования: ${programmingLanguage}.`,
+          topic ? `Тема: ${topic}.` : "Тема не указана.",
+          "История интервью:",
+          transcript || "Сообщения отсутствуют.",
+          typeof code === "string" && code.trim()
+            ? `Код пользователя:\n\`\`\`${programmingLanguage}\n${code.trim()}\n\`\`\``
+            : "Код пользователя не передан.",
+        ].join("\n\n"),
+      },
+    ]);
+
+    return answer;
+  }
 }
 
 module.exports = AiService;

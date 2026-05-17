@@ -20,6 +20,9 @@ export default function RoomPage() {
   const [finishError, setFinishError] = useState("");
   const [session, setSession] = useState<SessionType | null>(null);
   const [editorCode, setEditorCode] = useState("");
+  const [code, setCode] = useState("// Ваш код");
+  const [feedback, setFeedback] = useState("");
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const isComplited = status === "complited";
   const isRoomDisabled =
@@ -43,6 +46,12 @@ export default function RoomPage() {
         if (response.statusCode === 200) {
           setSession(response.data);
           setStatus(response.data.status);
+          if (response.data.result?.feedback) {
+            setFeedback(response.data.result.feedback);
+          }
+          if (response.data.result?.code) {
+            setCode(response.data.result.code);
+          }
           return;
         }
 
@@ -80,6 +89,9 @@ export default function RoomPage() {
 
   async function handleFinishInterview() {
     if (isComplited) {
+      if (feedback) {
+        setIsFeedbackOpen(true);
+      }
       return;
     }
 
@@ -87,11 +99,17 @@ export default function RoomPage() {
     setFinishError("");
 
     try {
-      const response = await SessionApi.finishSession(params.id);
+      const response = await SessionApi.finishSession(params.id, {
+        code,
+        programmingLanguage: "javascript",
+      });
 
       if (response.statusCode === 200) {
         setSession(response.data);
         setStatus(response.data.status);
+        setStatus(response.data.session.status);
+        setFeedback(response.data.feedback);
+        setIsFeedbackOpen(true);
         return;
       }
 
@@ -171,7 +189,7 @@ export default function RoomPage() {
           {isLoadingSession
             ? "Загружаем..."
             : isComplited
-              ? "Интервью завершено"
+              ? "Показать feedback"
               : isFinishing
                 ? "Завершаем..."
                 : "Завершить интервью"}
@@ -193,6 +211,35 @@ export default function RoomPage() {
           onSubmitCode={handleSubmitCode}
         />
       </div>
+      {isFeedbackOpen ? (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.35)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              color: "#111111",
+              width: "100%",
+              maxWidth: "720px",
+              padding: "24px",
+            }}
+          >
+            <h3>Feedback по интервью</h3>
+            <p style={{ whiteSpace: "pre-wrap" }}>{feedback}</p>
+            <button type="button" onClick={() => setIsFeedbackOpen(false)}>
+              Закрыть
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
