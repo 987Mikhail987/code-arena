@@ -16,6 +16,7 @@ export type MonacoLanguage =
   | "csharp";
 
 export type CodeEditorProps = {
+  code?: string;
   initialCode?: string;
   onChange?: (code: string) => void;
   onSubmitCode?: (code: string) => void;
@@ -24,39 +25,24 @@ export type CodeEditorProps = {
 };
 
 export default function Redactor({
+  code,
   initialCode = "// Ваш код",
   language = "javascript",
   onChange,
   onSubmitCode,
   disabled = false,
 }: CodeEditorProps) {
-  return (
-    <RedactorContent
-      key={`${language}:${initialCode}`}
-      initialCode={initialCode}
-      language={language}
-      onChange={onChange}
-      onSubmitCode={onSubmitCode}
-      disabled={disabled}
-    />
-  );
-}
+  const [lastSubmittedTaskKey, setLastSubmittedTaskKey] = useState("");
 
-function RedactorContent({
-  initialCode = "// Ваш код",
-  language = "javascript",
-  onChange,
-  onSubmitCode,
-  disabled = false,
-}: CodeEditorProps) {
-  const [code, setCode] = useState(initialCode);
-  const [terminalMessage, setTerminalMessage] = useState(
-    "Терминал готов к запуску.",
-  );
+  const currentCode = typeof code === "string" ? code : initialCode;
+  const taskKey = `${language}:${initialCode}`;
+  const terminalMessage =
+    lastSubmittedTaskKey === taskKey
+      ? "Код отправлен на проверку."
+      : "Терминал готов к запуску.";
 
   const handleEditorChange = (value: string | undefined) => {
     if (!disabled && value !== undefined) {
-      setCode(value);
       onChange?.(value);
     }
   };
@@ -66,8 +52,8 @@ function RedactorContent({
       return;
     }
 
-    onSubmitCode?.(code);
-    setTerminalMessage("Код отправлен на проверку.");
+    onSubmitCode?.(currentCode);
+    setLastSubmittedTaskKey(taskKey);
   };
 
   return (
@@ -78,14 +64,16 @@ function RedactorContent({
             height="100%"
             width="100%"
             language={language}
-            defaultValue={initialCode}
-            value={code}
+            value={currentCode}
             onChange={handleEditorChange}
             theme="vs-dark"
             options={{
               fontSize: 14,
               minimap: { enabled: false },
               readOnly: disabled,
+              wordWrap: "on",
+              wrappingIndent: "same",
+              scrollBeyondLastLine: false,
             }}
           />
         </div>
@@ -93,7 +81,11 @@ function RedactorContent({
       <section className={styles.terminal}>
         <div>
           <h3>Терминал</h3>
-          <p>{disabled ? "Интервью завершено. Запуск недоступен." : terminalMessage}</p>
+          <p>
+            {disabled
+              ? "Интервью завершено. Запуск недоступен."
+              : terminalMessage}
+          </p>
         </div>
         <button type="button" onClick={handleRunCode} disabled={disabled}>
           Запустить

@@ -55,6 +55,8 @@
   padding: 12px 14px;
   border-radius: 8px;
   line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .emptyState {
@@ -77,22 +79,50 @@
 .form {
   display: flex;
   gap: 10px;
+  align-items: flex-end;
 }
 
-.form input {
+.form textarea {
   flex: 1;
   min-width: 0;
   min-height: 44px;
-  padding: 0 14px;
+  max-height: 180px;
+  padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background-color: var(--control-bg);
   color: var(--foreground);
+  font: inherit;
   outline: none;
+  resize: none;
+  overflow-y: auto;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) color-mix(in srgb, var(--surface-muted) 62%, transparent);
 }
 
-.form input:focus {
+.form textarea::placeholder {
+  color: var(--foreground-muted);
+}
+
+.form textarea:focus {
   border-color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+
+.form textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+.form textarea::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--surface-muted) 52%, transparent);
+  border-radius: 999px;
+}
+
+.form textarea::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 60%, transparent);
 }
 
 .form button {

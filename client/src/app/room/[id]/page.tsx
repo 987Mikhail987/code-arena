@@ -268,6 +268,7 @@ export default function RoomPage() {
           onSendMessage={handleSendChatMessage}
         />
         <Redactor
+          code={editorCode}
           disabled={isRoomDisabled}
           initialCode={starterCode}
           language={editorLanguage}
