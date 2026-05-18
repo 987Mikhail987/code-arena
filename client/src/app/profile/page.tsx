@@ -5,6 +5,8 @@ import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
+import SessionApi from "@/entities/session/api/sessionApi";
+import type { MessageType, SessionType } from "@/entities/session/model/types";
 import UserApi from "@/entities/user/api/UserApi";
 import { selectUser } from "@/entities/user/model/selectors";
 import {
@@ -27,6 +29,19 @@ export function ProfilePage(): ReactNode {
   const [passwordMessage, setPasswordMessage] = useState("");
   const [accountMessage, setAccountMessage] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [sessions, setSessions] = useState<SessionType[]>([]);
+  const [sessionsMessage, setSessionsMessage] = useState("");
+  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
+  const [expandedSessionId, setExpandedSessionId] = useState<string | null>(
+    null,
+  );
+  const [sessionDetailsById, setSessionDetailsById] = useState<
+    Record<string, SessionType>
+  >({});
+  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(
+    null,
+  );
+  const [isClearingHistory, setIsClearingHistory] = useState(false);
 
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -41,6 +56,7 @@ export function ProfilePage(): ReactNode {
     defaultValues: {
       password: "",
       newPassword: "",
+      repeatNewPassword: "",
     },
   });
 
@@ -54,6 +70,46 @@ export function ProfilePage(): ReactNode {
       role: user.role,
     });
   }, [profileForm, user]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSessions() {
+      setIsLoadingSessions(true);
+      setSessionsMessage("");
+
+      try {
+        const response = await SessionApi.getUserSessions();
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (response.statusCode === 200) {
+          setSessions(response.data);
+          return;
+        }
+
+        setSessionsMessage(
+          response.error || response.message || "Не удалось загрузить историю",
+        );
+      } catch {
+        if (isMounted) {
+          setSessionsMessage("Не удалось загрузить историю");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingSessions(false);
+        }
+      }
+    }
+
+    void loadSessions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   if (!user) {
     return null;
@@ -81,12 +137,16 @@ export function ProfilePage(): ReactNode {
     setAccountMessage("");
     setPasswordMessage("");
 
-    const response = await UserApi.changePassword(values);
+    const response = await UserApi.changePassword({
+      password: values.password,
+      newPassword: values.newPassword,
+    });
 
     if (response?.statusCode === 200) {
       passwordForm.reset({
         password: "",
         newPassword: "",
+        repeatNewPassword: "",
       });
       setPasswordMessage("Пароль успешно обновлен");
       return;
@@ -131,6 +191,232 @@ export function ProfilePage(): ReactNode {
     setIsDeleting(false);
   }
 
+  async function toggleSessionDetails(sessionId: string) {
+    if (expandedSessionId === sessionId) {
+      setExpandedSessionId(null);
+      return;
+    }
+
+    setExpandedSessionId(sessionId);
+
+    if (sessionDetailsById[sessionId]) {
+      return;
+    }
+
+    const response = await SessionApi.getSessionById(sessionId);
+
+    if (response.statusCode === 200) {
+      setSessionDetailsById((prev) => ({
+        ...prev,
+        [sessionId]: response.data,
+      }));
+      return;
+    }
+
+    setSessionsMessage(
+      response.error || response.message || "Не удалось загрузить сообщения",
+    );
+  }
+
+  async function deleteSessionHandler(sessionId: string) {
+    const isConfirmed = window.confirm("Удалить это собеседование из истории?");
+
+    if (!isConfirmed) {
+      return;
+    }
+
+    setDeletingSessionId(sessionId);
+    setSessionsMessage("");
+
+    const response = await SessionApi.deleteSession(sessionId);
+
+    if (response.statusCode === 200) {
+      setSessions((prev) => prev.filter((session) => session.id !== sessionId));
+      setSessionDetailsById((prev) => {
+        const next = { ...prev };
+        delete next[sessionId];
+        return next;
+      });
+
+      if (expandedSessionId === sessionId) {
+        setExpandedSessionId(null);
+      }
+    } else {
+      setSessionsMessage(
+        response.error || response.message || "Не удалось удалить сессию",
+      );
+    }
+
+    setDeletingSessionId(null);
+  }
+
+  async function clearHistoryHandler() {
+    const isConfirmed = window.confirm(
+      "Очистить всю историю собеседований? Это действие нельзя отменить.",
+    );
+
+    if (!isConfirmed) {
+      return;
+    }
+
+    setIsClearingHistory(true);
+    setSessionsMessage("");
+
+    const response = await SessionApi.deleteAllSessions();
+
+    if (response.statusCode === 200) {
+      setSessions([]);
+      setSessionDetailsById({});
+      setExpandedSessionId(null);
+    } else {
+      setSessionsMessage(
+        response.error || response.message || "Не удалось очистить историю",
+      );
+    }
+
+    setIsClearingHistory(false);
+  }
+
+  function formatDate(date: string) {
+    return new Intl.DateTimeFormat("ru-RU", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(date));
+  }
+
+  function getMessageText(message: MessageType) {
+    const content = message.content.trim();
+
+    if (!content.startsWith("{")) {
+      return message.content;
+    }
+
+    try {
+      const parsed = JSON.parse(content) as {
+        chatMessage?: unknown;
+        answer?: unknown;
+      };
+      const visibleContent = parsed.chatMessage || parsed.answer;
+
+      return typeof visibleContent === "string" ? visibleContent : message.content;
+    } catch {
+      return message.content;
+    }
+  }
+
+  const historySection = (
+    <section className={styles.card}>
+      <div className={styles.sectionHeader}>
+        <div>
+          <h2 className={styles.cardTitle}>История собеседований</h2>
+          <p className={styles.sectionSubtitle}>
+            Прошлые сессии и сообщения внутри выбранного интервью.
+          </p>
+        </div>
+        <button
+          type="button"
+          className={styles.dangerButton}
+          onClick={clearHistoryHandler}
+          disabled={isLoadingSessions || sessions.length === 0 || isClearingHistory}
+        >
+          {isClearingHistory ? "Очищаем..." : "Очистить историю"}
+        </button>
+      </div>
+
+      {isLoadingSessions ? (
+        <p className={styles.message}>Загружаем историю...</p>
+      ) : null}
+      {sessionsMessage ? (
+        <p className={styles.formError}>{sessionsMessage}</p>
+      ) : null}
+      {!isLoadingSessions && sessions.length === 0 ? (
+        <p className={styles.message}>История пока пустая.</p>
+      ) : null}
+
+      <div className={styles.sessionsList}>
+        {sessions.map((session) => {
+          const isExpanded = expandedSessionId === session.id;
+          const details = sessionDetailsById[session.id];
+          const messages = details?.messages ?? [];
+          const isDeletingSession = deletingSessionId === session.id;
+
+          return (
+            <article className={styles.sessionCard} key={session.id}>
+              <div className={styles.sessionCardHeader}>
+                <div>
+                  <h3>{session.topic}</h3>
+                  <p>{formatDate(session.createdAt)}</p>
+                </div>
+                <span className={styles.statusBadge}>
+                  {session.status === "complited" ? "Завершено" : "Активно"}
+                </span>
+              </div>
+
+              <div className={styles.sessionMeta}>
+                <span>{session.level}</span>
+                <span>
+                  {session.programming_language || session.programmingLanguage}
+                </span>
+                <span>{session.type === "ai" ? "AI" : "Live"}</span>
+              </div>
+
+              {session.result?.feedback ? (
+                <p className={styles.feedbackPreview}>
+                  {session.result.feedback}
+                </p>
+              ) : null}
+
+              <div className={styles.sessionActions}>
+                <button
+                  type="button"
+                  className={styles.secondaryButton}
+                  onClick={() => toggleSessionDetails(session.id)}
+                  disabled={isDeletingSession}
+                >
+                  {isExpanded ? "Скрыть сообщения" : "Показать сообщения"}
+                </button>
+                <button
+                  type="button"
+                  className={styles.primaryButton}
+                  onClick={() => router.push(`/room/${session.id}`)}
+                  disabled={isDeletingSession}
+                >
+                  Открыть интервью
+                </button>
+                <button
+                  type="button"
+                  className={styles.dangerButton}
+                  onClick={() => deleteSessionHandler(session.id)}
+                  disabled={isDeletingSession}
+                >
+                  {isDeletingSession ? "Удаляем..." : "Удалить"}
+                </button>
+              </div>
+
+              {isExpanded ? (
+                <div className={styles.messagesList}>
+                  {messages.length > 0 ? (
+                    messages.map((message) => (
+                      <div className={styles.messageItem} key={message.id}>
+                        <strong>{message.role === "user" ? "Вы" : "AI"}</strong>
+                        <p>{getMessageText(message)}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className={styles.message}>Сообщений пока нет.</p>
+                  )}
+                </div>
+              ) : null}
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+
   return (
     <div className={`app-container ${styles.profilePage}`}>
       <section className={styles.heroCard}>
@@ -143,6 +429,8 @@ export function ProfilePage(): ReactNode {
           </span>
         </div>
       </section>
+
+      {historySection}
 
       <div className={styles.grid}>
         <section className={styles.card}>
@@ -238,6 +526,19 @@ export function ProfilePage(): ReactNode {
                 </p>
               ) : null}
             </div>
+            <div className={styles.formField}>
+              <FormInput
+                placeholder=" "
+                type="password"
+                label="Повторите новый пароль"
+                {...passwordForm.register("repeatNewPassword")}
+              />
+              {passwordForm.formState.errors.repeatNewPassword ? (
+                <p className={styles.formError}>
+                  {passwordForm.formState.errors.repeatNewPassword.message}
+                </p>
+              ) : null}
+            </div>
             {passwordForm.formState.errors.root ? (
               <p className={styles.formError}>
                 {passwordForm.formState.errors.root.message}
@@ -281,6 +582,7 @@ export function ProfilePage(): ReactNode {
           <p className={styles.message}>{accountMessage}</p>
         ) : null}
       </section>
+
     </div>
   );
 }

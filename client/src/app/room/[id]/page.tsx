@@ -8,7 +8,7 @@ import type {
 } from "@/entities/session/model/types";
 import Chat from "@/widgets/ChatwithAi/ChatwithAi";
 import Redactor from "@/widgets/Redactor/Redactor";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import styles from "./page.module.css";
 
@@ -20,6 +20,7 @@ function getLatestTaskMessage(messages?: MessageType[]) {
 
 export default function RoomPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const editorStorageKey = useMemo(
     () => `code-arena:session:${params.id}:editor-code`,
     [params.id],
@@ -301,6 +302,13 @@ export default function RoomPage() {
               <p>{feedback}</p>
             </div>
             <div className={styles.feedbackFooter}>
+              <button
+                type="button"
+                className={styles.feedbackSecondaryButton}
+                onClick={() => router.push("/dashboard")}
+              >
+                Начать новое собеседование
+              </button>
               <button
                 type="button"
                 className={styles.feedbackCloseButton}

@@ -31,10 +31,16 @@ export const profileSchema = z.object({
   role: z.enum(["candidate", "intervier"]),
 });
 
-export const passwordChangeSchema = z.object({
-  password: z.string().min(1, "Введите текущий пароль"),
-  newPassword: passwordSchema,
-});
+export const passwordChangeSchema = z
+  .object({
+    password: z.string().min(1, "Введите текущий пароль"),
+    newPassword: passwordSchema,
+    repeatNewPassword: z.string().min(1, "Повторите новый пароль"),
+  })
+  .refine((data) => data.newPassword === data.repeatNewPassword, {
+    message: "Пароли не совпадают",
+    path: ["repeatNewPassword"],
+  });
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
 export type RegisterFormValues = z.infer<typeof registerSchema>;

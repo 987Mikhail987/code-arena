@@ -156,6 +156,7 @@
 }
 
 .feedbackCloseIcon,
+.feedbackSecondaryButton,
 .feedbackCloseButton {
   min-height: 42px;
   border-radius: 8px;
@@ -177,6 +178,13 @@
   border: 1px solid color-mix(in srgb, var(--accent) 48%, transparent);
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: #fff7f4;
+}
+
+.feedbackSecondaryButton {
+  padding: 0 18px;
+  border: 1px solid var(--border);
+  background-color: var(--control-bg);
+  color: var(--foreground);
 }
 
 @media (max-width: 920px) {
