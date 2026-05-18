@@ -15,6 +15,8 @@ export type ProgrammingLanguageType =
 export type MessageMetadataType = {
   source?: "chat" | "editor";
   code?: string | null;
+  finishReason?: string;
+  itemType?: "practice" | "theory";
   task?: {
     description?: string;
     starterCode?: string;
@@ -41,6 +43,7 @@ export type SessionResultType = {
   messages: MessageType[];
   code: string;
   feedback: string;
+  finishReason?: string;
 };
 
 export type SessionType = {
@@ -73,5 +76,9 @@ export type CreateMessageParamsType = {
 
 export type CreateMessageResponseType = {
   userMessage: MessageType;
-  assistantMessage: MessageType;
+  assistantMessage?: MessageType | null;
+  session?: SessionType;
+  feedback?: string;
+  isFinished?: boolean;
+  finishReason?: string;
 };

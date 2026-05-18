@@ -2,6 +2,7 @@
 
 import SessionApi from "@/entities/session/api/sessionApi";
 import type {
+  MessageType,
   SessionStatusType,
   SessionType,
 } from "@/entities/session/model/types";
@@ -11,8 +12,18 @@ import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import styles from "./page.module.css";
 
+function getLatestTaskMessage(messages?: MessageType[]) {
+  return messages
+    ?.filter((message) => message.role === "assistant" || message.role === "ai")
+    .findLast((message) => message.metadata?.task);
+}
+
 export default function RoomPage() {
   const params = useParams<{ id: string }>();
+  const editorStorageKey = useMemo(
+    () => `code-arena:session:${params.id}:editor-code`,
+    [params.id],
+  );
   const [session, setSession] = useState<SessionType | null>(null);
   const [status, setStatus] = useState<SessionStatusType>("active");
   const [isLoadingSession, setIsLoadingSession] = useState(true);
@@ -26,6 +37,14 @@ export default function RoomPage() {
   const isComplited = status === "complited";
   const isRoomDisabled =
     isLoadingSession || Boolean(sessionError) || isFinishing || isComplited;
+
+  function updateEditorCode(code: string) {
+    setEditorCode(code);
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(editorStorageKey, code);
+    }
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -43,6 +62,12 @@ export default function RoomPage() {
         }
 
         if (response.statusCode === 200) {
+          const savedEditorCode =
+            typeof window !== "undefined"
+              ? window.localStorage.getItem(editorStorageKey)
+              : "";
+          const latestTask = getLatestTaskMessage(response.data.messages);
+
           setSession(response.data);
           setStatus(response.data.status);
 
@@ -52,6 +77,10 @@ export default function RoomPage() {
 
           if (response.data.result?.code) {
             setEditorCode(response.data.result.code);
+          } else if (savedEditorCode) {
+            setEditorCode(savedEditorCode);
+          } else if (latestTask?.metadata?.task?.starterCode) {
+            setEditorCode(latestTask.metadata.task.starterCode);
           }
 
           return;
@@ -76,14 +105,10 @@ export default function RoomPage() {
     return () => {
       isMounted = false;
     };
-  }, [params.id]);
+  }, [editorStorageKey, params.id]);
 
   const taskMessage = useMemo(() => {
-    return session?.messages
-      ?.filter(
-        (message) => message.role === "assistant" || message.role === "ai",
-      )
-      .findLast((message) => message.metadata?.task);
+    return getLatestTaskMessage(session?.messages);
   }, [session]);
 
   const starterCode =
@@ -117,6 +142,7 @@ export default function RoomPage() {
         setSession(response.data.session);
         setStatus(response.data.session.status);
         setFeedback(response.data.feedback);
+        window.localStorage.removeItem(editorStorageKey);
         setIsFeedbackOpen(true);
         return;
       }
@@ -131,41 +157,67 @@ export default function RoomPage() {
     }
   }
 
+  function handleProcessedMessage(
+    response: Awaited<ReturnType<typeof SessionApi.createMessage>>,
+  ) {
+    const assistantMessage = response.data.assistantMessage;
+    const assistantTask = assistantMessage?.metadata?.task;
+
+    if (assistantTask?.starterCode) {
+      updateEditorCode(assistantTask.starterCode);
+    }
+
+    setSession((prev) => {
+      const messages = [
+        ...(prev?.messages ?? []),
+        response.data.userMessage,
+        ...(assistantMessage ? [assistantMessage] : []),
+      ];
+
+      if (response.data.isFinished && response.data.session) {
+        return {
+          ...response.data.session,
+          messages,
+        };
+      }
+
+      return prev
+        ? {
+            ...prev,
+            messages,
+          }
+        : prev;
+    });
+
+    if (response.data.isFinished && response.data.session) {
+      setStatus(response.data.session.status);
+      setFeedback(response.data.feedback || "");
+      window.localStorage.removeItem(editorStorageKey);
+
+      if (response.data.feedback) {
+        setIsFeedbackOpen(true);
+      }
+    }
+  }
+
   async function handleSendChatMessage(content: string) {
     const response = await SessionApi.createMessage(params.id, {
       content,
       source: "chat",
     });
 
-    if (response.statusCode !== 201) {
+    if (response.statusCode !== 201 && response.statusCode !== 200) {
       setFinishError(
         response.error || response.message || "Не удалось отправить сообщение",
       );
       return;
     }
 
-    const assistantTask = response.data.assistantMessage.metadata?.task;
-
-    if (assistantTask?.starterCode) {
-      setEditorCode(assistantTask.starterCode);
-    }
-
-    setSession((prev) =>
-      prev
-        ? {
-            ...prev,
-            messages: [
-              ...(prev.messages ?? []),
-              response.data.userMessage,
-              response.data.assistantMessage,
-            ],
-          }
-        : prev,
-    );
+    handleProcessedMessage(response);
   }
 
   async function handleSubmitCode(code: string) {
-    setEditorCode(code);
+    updateEditorCode(code);
 
     const response = await SessionApi.createMessage(params.id, {
       content: "Проверь моё решение",
@@ -173,31 +225,14 @@ export default function RoomPage() {
       source: "editor",
     });
 
-    if (response.statusCode !== 201) {
+    if (response.statusCode !== 201 && response.statusCode !== 200) {
       setFinishError(
         response.error || response.message || "Не удалось отправить код",
       );
       return;
     }
 
-    const assistantTask = response.data.assistantMessage.metadata?.task;
-
-    if (assistantTask?.starterCode) {
-      setEditorCode(assistantTask.starterCode);
-    }
-
-    setSession((prev) =>
-      prev
-        ? {
-            ...prev,
-            messages: [
-              ...(prev.messages ?? []),
-              response.data.userMessage,
-              response.data.assistantMessage,
-            ],
-          }
-        : prev,
-    );
+    handleProcessedMessage(response);
   }
 
   return (
@@ -236,7 +271,7 @@ export default function RoomPage() {
           disabled={isRoomDisabled}
           initialCode={starterCode}
           language={editorLanguage}
-          onChange={setEditorCode}
+          onChange={updateEditorCode}
           onSubmitCode={handleSubmitCode}
         />
       </div>
