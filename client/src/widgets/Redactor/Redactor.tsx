@@ -23,18 +23,8 @@ export type CodeEditorProps = {
   disabled?: boolean;
 };
 
-const DEFAULT_CODE = "// \u0412\u0430\u0448 \u043a\u043e\u0434";
-const DEFAULT_TERMINAL_MESSAGE =
-  "\u0422\u0435\u0440\u043c\u0438\u043d\u0430\u043b \u0433\u043e\u0442\u043e\u0432 \u043a \u0437\u0430\u043f\u0443\u0441\u043a\u0443.";
-const CODE_SENT_MESSAGE =
-  "\u041a\u043e\u0434 \u043e\u0442\u043f\u0440\u0430\u0432\u043b\u0435\u043d \u043d\u0430 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0443.";
-const TERMINAL_TITLE = "\u0422\u0435\u0440\u043c\u0438\u043d\u0430\u043b";
-const DISABLED_MESSAGE =
-  "\u0418\u043d\u0442\u0435\u0440\u0432\u044c\u044e \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u043e. \u0417\u0430\u043f\u0443\u0441\u043a \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d.";
-const RUN_BUTTON_LABEL = "\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c";
-
 export default function Redactor({
-  initialCode = DEFAULT_CODE,
+  initialCode = "// Ваш код",
   language = "javascript",
   onChange,
   onSubmitCode,
@@ -53,14 +43,16 @@ export default function Redactor({
 }
 
 function RedactorContent({
-  initialCode = DEFAULT_CODE,
+  initialCode = "// Ваш код",
   language = "javascript",
   onChange,
   onSubmitCode,
   disabled = false,
 }: CodeEditorProps) {
   const [code, setCode] = useState(initialCode);
-  const [terminalMessage, setTerminalMessage] = useState(DEFAULT_TERMINAL_MESSAGE);
+  const [terminalMessage, setTerminalMessage] = useState(
+    "Терминал готов к запуску.",
+  );
 
   const handleEditorChange = (value: string | undefined) => {
     if (!disabled && value !== undefined) {
@@ -75,7 +67,7 @@ function RedactorContent({
     }
 
     onSubmitCode?.(code);
-    setTerminalMessage(CODE_SENT_MESSAGE);
+    setTerminalMessage("Код отправлен на проверку.");
   };
 
   return (
@@ -100,11 +92,11 @@ function RedactorContent({
       </div>
       <section className={styles.terminal}>
         <div>
-          <h3>{TERMINAL_TITLE}</h3>
-          <p>{disabled ? DISABLED_MESSAGE : terminalMessage}</p>
+          <h3>Терминал</h3>
+          <p>{disabled ? "Интервью завершено. Запуск недоступен." : terminalMessage}</p>
         </div>
         <button type="button" onClick={handleRunCode} disabled={disabled}>
-          {RUN_BUTTON_LABEL}
+          Запустить
         </button>
       </section>
     </div>
