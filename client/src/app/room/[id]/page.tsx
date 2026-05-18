@@ -80,7 +80,9 @@ export default function RoomPage() {
 
   const taskMessage = useMemo(() => {
     return session?.messages
-      ?.filter((message) => message.role === "assistant" || message.role === "ai")
+      ?.filter(
+        (message) => message.role === "assistant" || message.role === "ai",
+      )
       .findLast((message) => message.metadata?.task);
   }, [session]);
 
@@ -142,6 +144,12 @@ export default function RoomPage() {
       return;
     }
 
+    const assistantTask = response.data.assistantMessage.metadata?.task;
+
+    if (assistantTask?.starterCode) {
+      setEditorCode(assistantTask.starterCode);
+    }
+
     setSession((prev) =>
       prev
         ? {
@@ -170,6 +178,12 @@ export default function RoomPage() {
         response.error || response.message || "Не удалось отправить код",
       );
       return;
+    }
+
+    const assistantTask = response.data.assistantMessage.metadata?.task;
+
+    if (assistantTask?.starterCode) {
+      setEditorCode(assistantTask.starterCode);
     }
 
     setSession((prev) =>

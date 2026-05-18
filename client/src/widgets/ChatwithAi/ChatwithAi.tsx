@@ -67,6 +67,11 @@ export default function Chat({
             >
               <strong>{message.role === "user" ? "Вы" : "AI"}:</strong>{" "}
               {message.content}
+              {message.metadata?.task?.description ? (
+                <div>
+                  <p>{message.metadata.task.description}</p>
+                </div>
+              ) : null}
             </div>
           ))
         )}
