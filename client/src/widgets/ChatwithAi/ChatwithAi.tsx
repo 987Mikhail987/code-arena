@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styles from "./ChatwithAi.module.css";
 import type { MessageType } from "@/entities/session/model/types";
 
@@ -22,6 +22,20 @@ export default function Chat({
   disabled = false,
 }: ChatProps) {
   const [inputValue, setInputValue] = useState("");
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messages]);
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -40,7 +54,7 @@ export default function Chat({
     <section className={styles.chat}>
       <h3>{title}</h3>
 
-      <div className={styles.messages}>
+      <div ref={messagesContainerRef} className={styles.messages}>
         {messages.length === 0 ? (
           <div className={styles.emptyState}>Начните диалог с AI</div>
         ) : (

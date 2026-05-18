@@ -1,5 +1,6 @@
 .chat {
-  min-height: 520px;
+  height: 70vh;
+  max-height: 70vh;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -18,9 +19,34 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) color-mix(in srgb, var(--surface-muted) 62%, transparent);
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.messages::-webkit-scrollbar {
+  width: 10px;
+}
+
+.messages::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--surface-muted) 52%, transparent);
+  border-radius: 999px;
+}
+
+.messages::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, var(--accent-strong), var(--accent));
+  background-clip: padding-box;
+}
+
+.messages::-webkit-scrollbar-thumb:hover {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent-strong) 88%, white), var(--accent));
+  background-clip: padding-box;
 }
 
 .emptyState,

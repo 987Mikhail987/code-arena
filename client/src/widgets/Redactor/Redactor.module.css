@@ -1,5 +1,6 @@
 .editorShell {
-  min-height: 520px;
+  height: 70vh;
+  max-height: 70vh;
   display: grid;
   grid-template-rows: 1fr auto;
   gap: 14px;
@@ -12,9 +13,44 @@
 }
 
 .editorPanel {
+  min-height: 0;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 6px;
+}
+
+.editorViewport {
+  height: 100%;
+  min-height: 0;
+}
+
+.editorViewport :global(.monaco-editor .scrollbar) {
+  background: color-mix(in srgb, var(--surface-muted) 24%, transparent);
+}
+
+.editorViewport :global(.monaco-editor .scrollbar.vertical),
+.editorViewport :global(.monaco-editor .scrollbar.horizontal) {
+  border-radius: 999px;
+  opacity: 0.72;
+}
+
+.editorViewport :global(.monaco-editor .scrollbar .slider) {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--foreground-muted) 34%, transparent) !important;
+}
+
+.editorViewport :global(.monaco-editor .scrollbar .slider:hover) {
+  background: color-mix(in srgb, var(--foreground-muted) 48%, transparent) !important;
+}
+
+.editorViewport :global(.monaco-editor .scrollbar.vertical .slider) {
+  width: 6px !important;
+  left: 2px !important;
+}
+
+.editorViewport :global(.monaco-editor .scrollbar.horizontal .slider) {
+  height: 6px !important;
+  top: 2px !important;
 }
 
 .terminal {
