@@ -14,6 +14,26 @@ export type ChatProps = {
   onSubmitCode?: (code: string) => void;
 };
 
+function getVisibleMessageContent(content: string) {
+  const trimmedContent = content.trim();
+
+  if (!trimmedContent.startsWith("{")) {
+    return content;
+  }
+
+  try {
+    const parsed = JSON.parse(trimmedContent) as {
+      chatMessage?: unknown;
+      answer?: unknown;
+    };
+    const visibleContent = parsed.chatMessage || parsed.answer;
+
+    return typeof visibleContent === "string" ? visibleContent : content;
+  } catch {
+    return content;
+  }
+}
+
 export default function Chat({
   messages = [],
   onSendMessage,
@@ -66,7 +86,7 @@ export default function Chat({
               key={message.id}
             >
               <strong>{message.role === "user" ? "Вы" : "AI"}:</strong>{" "}
-              {message.content}
+              {getVisibleMessageContent(message.content)}
               {message.metadata?.task?.description ? (
                 <div>
                   <p>{message.metadata.task.description}</p>

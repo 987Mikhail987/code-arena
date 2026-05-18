@@ -30,6 +30,71 @@ function buildFallbackFirstMessage(level, programmingLanguage, topic) {
     .join("\n\n");
 }
 
+function buildFallbackFirstTask(programmingLanguage, topic) {
+  return {
+    description: [
+      topic
+        ? `Реши практическую задачу по теме "${topic}".`
+        : "Реши практическую задачу по выбранной теме.",
+      "Опиши подход и напиши рабочее решение в редакторе.",
+    ].join(" "),
+    starterCode: "// Напишите решение здесь",
+    editorLanguage: programmingLanguage,
+  };
+}
+
+function buildSessionMessages(session) {
+  return (session.messages || []).map((message) => ({
+    id: message.id,
+    role: message.role,
+    content: message.content,
+    metadata: message.metadata || null,
+    createdAt: message.createdAt,
+  }));
+}
+
+function getLatestEditorCode(messages, fallbackCode = "") {
+  const messageWithCode = [...messages]
+    .reverse()
+    .find((message) => typeof message.metadata?.code === "string");
+
+  return messageWithCode?.metadata?.code || fallbackCode || "";
+}
+
+async function finishSessionWithFeedback({
+  session,
+  sessionId,
+  userId,
+  messages,
+  code,
+  finishReason = "manual",
+}) {
+  const programmingLanguage = session.programming_language || "javascript";
+  const feedback = await AiService.generateInterviewFeedback({
+    difficulty: session.level,
+    programmingLanguage,
+    topic: session.topic,
+    messages,
+    code,
+  });
+
+  const finishedSession = await SessionService.finishSession(
+    sessionId,
+    userId,
+    {
+      messages,
+      code: typeof code === "string" ? code : "",
+      feedback,
+      finishReason,
+    },
+  );
+
+  return {
+    finishedSession,
+    feedback,
+  };
+}
+
 class SessionController {
   static async createSession(req, res) {
     const { user } = res.locals;
@@ -121,7 +186,10 @@ class SessionController {
               programmingLanguage,
               topic.trim(),
             ),
-            metadata: null,
+            metadata: {
+              itemType: "practice",
+              task: buildFallbackFirstTask(programmingLanguage, topic.trim()),
+            },
           });
         }
       }
@@ -219,45 +287,25 @@ class SessionController {
         );
       }
 
-      const resultMessages = (session.messages || []).map((message) => ({
-        id: message.id,
-        role: message.role,
-        content: message.content,
-        metadata: message.metadata || null,
-        createdAt: message.createdAt,
-      }));
-
-      const result = await AiService.getInterviewResult({
-        difficulty: session.level,
-        programmingLanguage:
-          session.programming_language || programmingLanguage || "javascript",
-        topic: session.topic,
-        messages: resultMessages,
-      });
-
-      const feedback = await AiService.generateInterviewFeedback({
-        difficulty: session.level,
-        programmingLanguage:
-          session.programming_language || programmingLanguage || "javascript",
-        topic: session.topic,
+      const resultMessages = buildSessionMessages(session);
+      const { finishedSession, feedback } = await finishSessionWithFeedback({
+        session: {
+          ...session.get(),
+          programming_language:
+            session.programming_language || programmingLanguage || "javascript",
+        },
+        sessionId,
+        userId: user.id,
         messages: resultMessages,
         code,
       });
 
-      const finishedSession = await SessionService.finishSession(
-        sessionId,
-        user.id,
-        {
-          summary: result,
-          messages: resultMessages,
-          code: typeof code === "string" ? code : "",
-          feedback,
-        },
-      );
-
       return res.status(200).json(
         formatResponse(200, "Тренировочная сессия завершена", {
-          session: finishedSession,
+          session: {
+            ...finishedSession.get(),
+            messages: resultMessages,
+          },
           feedback,
         }),
       );
@@ -315,6 +363,58 @@ class SessionController {
         return res
           .status(404)
           .json(formatResponse(404, "Тренировочная сессия не найдена"));
+      }
+
+      const resultMessages = buildSessionMessages(session);
+      const contextLength = AiService.getContextLength({
+        topic: session.topic,
+        messages: resultMessages,
+      });
+
+      if (contextLength >= AiService.AI_CONTEXT_SOFT_LIMIT) {
+        const assistantMessage = await MessageService.createSessionMessage(
+          sessionId,
+          {
+            role: "assistant",
+            content:
+              "Контекст интервью подошёл к лимиту, поэтому я завершаю интервью и готовлю feedback.",
+            metadata: {
+              finishReason: "context_limit",
+            },
+          },
+        );
+        const messagesWithLimitNotice = [
+          ...resultMessages,
+          {
+            id: assistantMessage.id,
+            role: assistantMessage.role,
+            content: assistantMessage.content,
+            metadata: assistantMessage.metadata || null,
+            createdAt: assistantMessage.createdAt,
+          },
+        ];
+        const { finishedSession, feedback } = await finishSessionWithFeedback({
+          session,
+          sessionId,
+          userId: user.id,
+          messages: messagesWithLimitNotice,
+          code: getLatestEditorCode(resultMessages, code.trim()),
+          finishReason: "context_limit",
+        });
+
+        return res.status(200).json(
+          formatResponse(200, "Интервью завершено из-за лимита контекста", {
+            userMessage,
+            assistantMessage,
+            session: {
+              ...finishedSession.get(),
+              messages: messagesWithLimitNotice,
+            },
+            feedback,
+            isFinished: true,
+            finishReason: "context_limit",
+          }),
+        );
       }
 
       const aiData = await AiService.getAiAnswer({

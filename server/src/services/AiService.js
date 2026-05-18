@@ -1,46 +1,157 @@
-process.loadEnvFile();
+try {
+  process.loadEnvFile();
+} catch (error) {
+  if (error.code !== "ENOENT") {
+    throw error;
+  }
+}
 
 const { GigaChat } = require("gigachat");
 const { Agent } = require("node:https");
 
+const AI_CONTEXT_LIMIT = 6000;
+const AI_CONTEXT_SOFT_LIMIT = 4800;
+
 class AiService {
+  static get AI_CONTEXT_LIMIT() {
+    return AI_CONTEXT_LIMIT;
+  }
+
+  static get AI_CONTEXT_SOFT_LIMIT() {
+    return AI_CONTEXT_SOFT_LIMIT;
+  }
+
   static getCredentials() {
     return process.env.GIGACHAT_CREDENTIALS || process.env.GIGACHAT_API_KEY;
   }
 
-  static buildSystemPrompt({ difficulty, programmingLanguage, topic }) {
+  static getContextLength({ topic, message, messages, code }) {
+    const topicLength = typeof topic === "string" ? topic.length : 0;
+    const messageLength = typeof message === "string" ? message.length : 0;
+    const codeLength = typeof code === "string" ? code.length : 0;
+
+    const messagesLength = Array.isArray(messages)
+      ? messages.reduce((total, currentMessage) => {
+          if (typeof currentMessage === "string") {
+            return total + currentMessage.length;
+          }
+
+          if (!currentMessage || typeof currentMessage !== "object") {
+            return total;
+          }
+
+          const contentLength =
+            typeof currentMessage.content === "string"
+              ? currentMessage.content.length
+              : 0;
+          const metadataCodeLength =
+            typeof currentMessage.metadata?.code === "string"
+              ? currentMessage.metadata.code.length
+              : 0;
+          const taskDescriptionLength =
+            typeof currentMessage.metadata?.task?.description === "string"
+              ? currentMessage.metadata.task.description.length
+              : 0;
+
+          return (
+            total +
+            contentLength +
+            metadataCodeLength +
+            taskDescriptionLength
+          );
+        }, 0)
+      : 0;
+
+    return topicLength + messageLength + codeLength + messagesLength;
+  }
+
+  static getInterviewItemStats(messages = []) {
+    if (!Array.isArray(messages)) {
+      return {
+        practiceCount: 0,
+        theoryCount: 0,
+      };
+    }
+
+    return messages.reduce(
+      (stats, message) => {
+        if (
+          !message ||
+          (message.role !== "assistant" && message.role !== "ai")
+        ) {
+          return stats;
+        }
+
+        if (message.metadata?.itemType === "theory") {
+          stats.theoryCount += 1;
+          return stats;
+        }
+
+        if (message.metadata?.itemType === "practice" || message.metadata?.task) {
+          stats.practiceCount += 1;
+        }
+
+        return stats;
+      },
+      {
+        practiceCount: 0,
+        theoryCount: 0,
+      },
+    );
+  }
+
+  static getPreferredNextItemType(messages = [], isFirstRequest = false) {
+    if (isFirstRequest) {
+      return "practice";
+    }
+
+    const { practiceCount, theoryCount } = this.getInterviewItemStats(messages);
+
+    if (practiceCount - theoryCount * 2 >= 2) {
+      return "theory";
+    }
+
+    return "practice";
+  }
+
+  static buildSystemPrompt({
+    difficulty,
+    programmingLanguage,
+    topic,
+    preferredNextItemType,
+  }) {
     const normalizedTopic = topic?.trim();
+    const nextItemDescription =
+      preferredNextItemType === "theory"
+        ? "теоретический вопрос"
+        : "практическая задача";
 
     return [
       "Ты технический интервьюер для учебного приложения CodeArena.",
-      `Текущий уровень пользователя: ${difficulty}.`,
-      `Основной язык программирования: ${programmingLanguage}.`,
+      `Уровень: ${difficulty}.`,
+      `Язык: ${programmingLanguage}.`,
       normalizedTopic
-        ? `Тема тренировки: ${normalizedTopic}.`
-        : "Тема тренировки не указана.",
-      "Если диалог только начинается, поприветствуй пользователя и дай одну задачу с технического собеседования на текущем уровне.",
-      "Если в истории или текущем сообщении есть код пользователя, проанализируй решение.",
-      "Нужно определить, правильно ли решена задача, где можно улучшить код, алгоритм, читаемость, сложность или обработку крайних случаев.",
-      "После анализа обязательно дай следующую задачу.",
-      "Если пользователь справился плохо, следующая задача должна быть легче.",
-      "Если пользователь справился хорошо, следующая задача должна быть немного сложнее.",
-      "Если пользователь справился средне, следующая задача должна быть того же уровня, но с другой формулировкой.",
-      "Никогда не давай полное готовое решение текущей задачи.",
-      "Если пользователь просит показать решение, дать готовый код, решить задачу за него или написать полный ответ, откажись от полного решения.",
-      "Вместо полного решения дай только направление, 1-2 подсказки по алгоритму, укажи на следующий шаг или предложи задачу полегче.",
+        ? `Тема: ${normalizedTopic}.`
+        : "Тема не указана.",
+      "Первое сообщение: приветствие и практическая задача с task.description, task.starterCode, task.editorLanguage.",
+      "Дальше держи баланс: 30% теория, 70% практика.",
+      `Предпочтительный следующий шаг: ${nextItemDescription}.`,
+      preferredNextItemType === "theory"
+        ? "Сейчас обязательно задай именно теоретический вопрос без starterCode и с task:null."
+        : "Сейчас обязательно выдай практическую задачу с task.description, task.starterCode и task.editorLanguage.",
+      "Теория: task:null, вопрос только в chatMessage.",
+      "Практика: task с description, starterCode, editorLanguage.",
+      "Если пользователь задаёт уточняющий вопрос, дай направление или 1-2 подсказки без нового вопроса, если он не нужен.",
+      "Если есть код, оцени правильность, алгоритм, сложность, читаемость и крайние случаи.",
+      "Если ответ верен или задача решена, выдай следующий вопрос или задачу.",
+      "После слабого ответа дай шаг легче, после хорошего - сложнее, после среднего - того же уровня.",
+      "Никогда не давай готовое решение, полный код или полный ответ за пользователя.",
       "Отвечай только на русском языке.",
-      "Всегда отвечай строго валидным JSON без markdown.",
-      "Ответ должен быть валидным JSON, который можно сразу передать в JSON.parse.",
-      "Все двойные кавычки внутри строк обязательно экранируй обратным слэшем.",
-      "В текстовых примерах внутри JSON используй одинарные кавычки вместо двойных, например 'madam', а не \"madam\".",
-      "Не добавляй текст до JSON и после JSON.",
+      "Верни только валидный JSON без markdown, текста до или после JSON.",
+      "Экранируй двойные кавычки внутри строк; в примерах используй одинарные кавычки.",
       'Формат: {"chatMessage":"string","task":null или {"description":"string","starterCode":"string","editorLanguage":"string"},"review":null или {"summary":"string","improvements":["string"],"score":number}}.',
-      "chatMessage показывается пользователю в чате.",
-      "task заполняй только если выдаешь новую задачу или новый стартовый код.",
-      "review заполняй только если анализируешь решение пользователя.",
-      "Никогда не давай полное готовое решение.",
-      "Если пользователь просит подсказку, дай направление, идею или 1-2 вопроса, но не готовый код.",
-      "Структурируй ответ так: 1. Оценка решения. 2. Что улучшить. 3. Следующая задача.",
+      "chatMessage видит пользователь: без JSON и служебных полей.",
+      "review заполняй только при анализе ответа пользователя.",
     ].join(" ");
   }
 
@@ -51,12 +162,55 @@ class AiService {
       `Начни тренировочное интервью для уровня ${difficulty}.`,
       `Язык: ${programmingLanguage}.`,
       normalizedTopic ? `Тема: ${normalizedTopic}.` : "",
-      "Поздоровайся и выдай первую задачу.",
+      "Поздоровайся и выдай первую практическую задачу.",
       "Поле task обязательно должно быть заполнено.",
+      "В task обязательно должны быть description, starterCode и editorLanguage.",
       "Не давай готовое решение.",
     ]
       .filter(Boolean)
       .join(" ");
+  }
+
+  static buildForcedTheoryMessages({
+    difficulty,
+    programmingLanguage,
+    topic,
+    messages,
+  }) {
+    const normalizedTopic = topic?.trim();
+    const history = this.normalizeMessages(messages).slice(-8);
+
+    return [
+      {
+        role: "system",
+        content: [
+          "Ты технический интервьюер CodeArena.",
+          `Уровень: ${difficulty}.`,
+          `Язык: ${programmingLanguage}.`,
+          normalizedTopic ? `Тема: ${normalizedTopic}.` : "Тема не указана.",
+          "Сгенерируй именно теоретический вопрос для собеседования.",
+          "Не давай практическую задачу, starterCode, код или готовое решение.",
+          "Верни только валидный JSON без markdown.",
+          'Формат: {"chatMessage":"string","task":null,"review":null}.',
+        ].join(" "),
+      },
+      ...history,
+      {
+        role: "user",
+        content:
+          "Дай следующий теоретический вопрос. В поле task обязательно верни null.",
+      },
+    ];
+  }
+
+  static withInterviewItemType(aiData, itemType) {
+    return {
+      ...aiData,
+      metadata: {
+        ...(aiData.metadata || {}),
+        itemType,
+      },
+    };
   }
 
   static normalizeMessages(messages = []) {
@@ -373,11 +527,29 @@ class AiService {
   }
 
   static cleanFallbackAnswer(text) {
-    return String(text || "")
+    const cleaned = String(text || "")
       .replace(/^```(?:json|javascript|typescript|js|ts|python)?/i, "")
       .replace(/```$/i, "")
       .replace(/```[\s\S]*?```/g, "")
       .trim();
+
+    const chatMessageMatch = cleaned.match(
+      /"chatMessage"\s*:\s*"((?:\\.|[^"\\])*)"/,
+    );
+
+    if (chatMessageMatch) {
+      try {
+        return JSON.parse(`"${chatMessageMatch[1]}"`).trim();
+      } catch {
+        return chatMessageMatch[1].trim();
+      }
+    }
+
+    if (/^\s*\{[\s\S]*\}\s*$/.test(cleaned)) {
+      return "Я подготовил ответ, но не смог корректно выделить текст для чата. Попробуй отправить сообщение ещё раз.";
+    }
+
+    return cleaned;
   }
 
   // static parseAiResponse(answer, programmingLanguage) {
@@ -442,6 +614,10 @@ class AiService {
     const normalizedMessage = typeof message === "string" ? message.trim() : "";
     const isFirstRequest =
       normalizedMessages.length === 0 && normalizedMessage.length === 0;
+    const preferredNextItemType = this.getPreferredNextItemType(
+      messages,
+      isFirstRequest,
+    );
 
     if (!isFirstRequest) {
       const clarificationDecision = await this.getClarificationDecision(
@@ -472,6 +648,7 @@ class AiService {
           difficulty,
           programmingLanguage,
           topic,
+          preferredNextItemType,
         }),
       },
       ...normalizedMessages,
@@ -496,8 +673,33 @@ class AiService {
     }
 
     const answer = await this.requestChat(client, chatMessages);
+    const aiData = this.parseAiResponse(answer, programmingLanguage);
 
-    return this.parseAiResponse(answer, programmingLanguage);
+    if (preferredNextItemType === "theory" && aiData.metadata?.task) {
+      const theoryAnswer = await this.requestChat(
+        client,
+        this.buildForcedTheoryMessages({
+          difficulty,
+          programmingLanguage,
+          topic,
+          messages,
+        }),
+      );
+      const theoryData = this.parseAiResponse(theoryAnswer, programmingLanguage);
+
+      return this.withInterviewItemType(
+        {
+          ...theoryData,
+          metadata: {
+            ...(theoryData.metadata || {}),
+            task: null,
+          },
+        },
+        "theory",
+      );
+    }
+
+    return this.withInterviewItemType(aiData, preferredNextItemType);
   }
 
   static async getInterviewResult({
@@ -532,6 +734,61 @@ class AiService {
     return this.extractJson(answer);
   }
 
+  static buildInterviewFeedbackInput({
+    difficulty,
+    programmingLanguage,
+    topic,
+    messages,
+    code,
+  }) {
+    const buildTranscript = (sourceMessages) =>
+      sourceMessages
+        .map((message) => `${message.role}: ${message.content}`)
+        .join("\n\n");
+
+    const normalizedMessages = Array.isArray(messages) ? messages : [];
+    const normalizedCode =
+      typeof code === "string" && code.trim() ? code.trim() : "";
+
+    const buildPayload = (sourceMessages, sourceCode, isShortened = false) =>
+      [
+        `Уровень интервью: ${difficulty}.`,
+        `Язык программирования: ${programmingLanguage}.`,
+        topic ? `Тема: ${topic}.` : "Тема не указана.",
+        isShortened
+          ? "История интервью сокращена из-за лимита контекста."
+          : "История интервью:",
+        buildTranscript(sourceMessages) || "Сообщения отсутствуют.",
+        sourceCode
+          ? `Код пользователя:\n\`\`\`${programmingLanguage}\n${sourceCode}\n\`\`\``
+          : "Код пользователя не передан.",
+      ].join("\n\n");
+
+    const fullPayload = buildPayload(normalizedMessages, normalizedCode);
+
+    if (fullPayload.length <= AI_CONTEXT_SOFT_LIMIT) {
+      return fullPayload;
+    }
+
+    const shortenedMessages = normalizedMessages.slice(-12);
+    const codeLimit = Math.floor(
+      Math.min(1600, Math.max(0, AI_CONTEXT_SOFT_LIMIT / 2)),
+    );
+    const shortenedCode =
+      normalizedCode.length > codeLimit
+        ? normalizedCode.slice(-codeLimit)
+        : normalizedCode;
+    const shortenedPayload = buildPayload(
+      shortenedMessages,
+      shortenedCode,
+      true,
+    );
+
+    return shortenedPayload.length > AI_CONTEXT_SOFT_LIMIT
+      ? shortenedPayload.slice(0, AI_CONTEXT_SOFT_LIMIT)
+      : shortenedPayload;
+  }
+
   static async generateInterviewFeedback({
     difficulty,
     programmingLanguage,
@@ -541,37 +798,27 @@ class AiService {
   }) {
     const client = this.createClient();
 
-    const transcript = (messages || [])
-      .map((message) => `${message.role}: ${message.content}`)
-      .join("\n\n");
-
     const answer = await this.requestChat(client, [
       {
         role: "system",
         content: [
           "Ты технический интервьюер для учебного приложения CodeArena.",
-          "Тебе нужно дать итоговый feedback по завершённому интервью.",
-          "Проанализируй все сообщения интервью и код пользователя.",
-          "Скажи, прошел бы пользователь интервью или нет.",
-          "Укажи сильные стороны ответа.",
-          "Укажи, что можно улучшить в коде, алгоритме и рассуждениях.",
-          "Укажи, какие темы стоит повторить.",
+          "Дай только итоговый анализ завершённого интервью.",
+          "Не добавляй приветствие, JSON, markdown и служебные пояснения.",
+          "Не предлагай новую задачу и не решай задачи за пользователя.",
           "Отвечай только на русском языке.",
-          "Структурируй ответ так: 1. Итог. 2. Что получилось хорошо. 3. Что улучшить.",
+          "Структура ответа строго: 1. Итог. 2. Что получилось хорошо. 3. Что улучшить.",
         ].join(" "),
       },
       {
         role: "user",
-        content: [
-          `Уровень интервью: ${difficulty}.`,
-          `Язык программирования: ${programmingLanguage}.`,
-          topic ? `Тема: ${topic}.` : "Тема не указана.",
-          "История интервью:",
-          transcript || "Сообщения отсутствуют.",
-          typeof code === "string" && code.trim()
-            ? `Код пользователя:\n\`\`\`${programmingLanguage}\n${code.trim()}\n\`\`\``
-            : "Код пользователя не передан.",
-        ].join("\n\n"),
+        content: this.buildInterviewFeedbackInput({
+          difficulty,
+          programmingLanguage,
+          topic,
+          messages,
+          code,
+        }),
       },
     ]);
 
