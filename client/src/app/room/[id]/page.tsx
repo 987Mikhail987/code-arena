@@ -11,6 +11,27 @@ import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import styles from "./page.module.css";
 
+const DEFAULT_CODE = "// \u0412\u0430\u0448 \u043a\u043e\u0434";
+const LOAD_SESSION_ERROR =
+  "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0438\u043d\u0442\u0435\u0440\u0432\u044c\u044e";
+const FINISH_SESSION_ERROR =
+  "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044c \u0438\u043d\u0442\u0435\u0440\u0432\u044c\u044e";
+const SEND_MESSAGE_ERROR =
+  "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043e\u0442\u043f\u0440\u0430\u0432\u0438\u0442\u044c \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435";
+const SEND_CODE_ERROR =
+  "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043e\u0442\u043f\u0440\u0430\u0432\u0438\u0442\u044c \u043a\u043e\u0434";
+const CHECK_SOLUTION_MESSAGE =
+  "\u041f\u0440\u043e\u0432\u0435\u0440\u044c \u043c\u043e\u0451 \u0440\u0435\u0448\u0435\u043d\u0438\u0435";
+const ROOM_LABEL = "\u041a\u043e\u043c\u043d\u0430\u0442\u0430 \u0438\u043d\u0442\u0435\u0440\u0432\u044c\u044e";
+const ROOM_TITLE =
+  "\u0414\u043e\u0431\u0440\u043e \u043f\u043e\u0436\u0430\u043b\u043e\u0432\u0430\u0442\u044c \u043d\u0430 \u0441\u043e\u0431\u0435\u0441\u0435\u0434\u043e\u0432\u0430\u043d\u0438\u0435";
+const LOADING_LABEL = "\u0417\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u043c...";
+const OPEN_FEEDBACK_LABEL = "\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c feedback";
+const FINISHING_LABEL = "\u0417\u0430\u0432\u0435\u0440\u0448\u0430\u0435\u043c...";
+const FINISH_LABEL = "\u0417\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044c \u0438\u043d\u0442\u0435\u0440\u0432\u044c\u044e";
+const FEEDBACK_TITLE = "Feedback \u043f\u043e \u0438\u043d\u0442\u0435\u0440\u0432\u044c\u044e";
+const CLOSE_LABEL = "\u0417\u0430\u043a\u0440\u044b\u0442\u044c";
+
 export default function RoomPage() {
   const params = useParams<{ id: string }>();
   const [session, setSession] = useState<SessionType | null>(null);
@@ -19,7 +40,7 @@ export default function RoomPage() {
   const [isFinishing, setIsFinishing] = useState(false);
   const [sessionError, setSessionError] = useState("");
   const [finishError, setFinishError] = useState("");
-  const [editorCode, setEditorCode] = useState("// Ваш код");
+  const [editorCode, setEditorCode] = useState(DEFAULT_CODE);
   const [feedback, setFeedback] = useState("");
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
@@ -57,12 +78,10 @@ export default function RoomPage() {
           return;
         }
 
-        setSessionError(
-          response.error || response.message || "Не удалось загрузить интервью",
-        );
+        setSessionError(response.error || response.message || LOAD_SESSION_ERROR);
       } catch {
         if (isMounted) {
-          setSessionError("Не удалось загрузить интервью");
+          setSessionError(LOAD_SESSION_ERROR);
         }
       } finally {
         if (isMounted) {
@@ -85,9 +104,7 @@ export default function RoomPage() {
   }, [session]);
 
   const starterCode =
-    session?.result?.code ||
-    taskMessage?.metadata?.task?.starterCode ||
-    "// Ваш код";
+    session?.result?.code || taskMessage?.metadata?.task?.starterCode || DEFAULT_CODE;
 
   const editorLanguage =
     taskMessage?.metadata?.task?.editorLanguage ||
@@ -119,11 +136,9 @@ export default function RoomPage() {
         return;
       }
 
-      setFinishError(
-        response.error || response.message || "Не удалось завершить интервью",
-      );
+      setFinishError(response.error || response.message || FINISH_SESSION_ERROR);
     } catch {
-      setFinishError("Не удалось завершить интервью");
+      setFinishError(FINISH_SESSION_ERROR);
     } finally {
       setIsFinishing(false);
     }
@@ -136,9 +151,7 @@ export default function RoomPage() {
     });
 
     if (response.statusCode !== 201) {
-      setFinishError(
-        response.error || response.message || "Не удалось отправить сообщение",
-      );
+      setFinishError(response.error || response.message || SEND_MESSAGE_ERROR);
       return;
     }
 
@@ -160,15 +173,13 @@ export default function RoomPage() {
     setEditorCode(code);
 
     const response = await SessionApi.createMessage(params.id, {
-      content: "Проверь моё решение",
+      content: CHECK_SOLUTION_MESSAGE,
       code,
       source: "editor",
     });
 
     if (response.statusCode !== 201) {
-      setFinishError(
-        response.error || response.message || "Не удалось отправить код",
-      );
+      setFinishError(response.error || response.message || SEND_CODE_ERROR);
       return;
     }
 
@@ -190,8 +201,8 @@ export default function RoomPage() {
     <div className={`app-container ${styles.roomPage}`}>
       <section className={styles.heading}>
         <div>
-          <p>Комната интервью</p>
-          <h2>Добро пожаловать на собеседование</h2>
+          <p>{ROOM_LABEL}</p>
+          <h2>{ROOM_TITLE}</h2>
         </div>
         <button
           type="button"
@@ -200,12 +211,12 @@ export default function RoomPage() {
           disabled={isLoadingSession || Boolean(sessionError) || isFinishing}
         >
           {isLoadingSession
-            ? "Загружаем..."
+            ? LOADING_LABEL
             : isComplited
-              ? "Показать feedback"
+              ? OPEN_FEEDBACK_LABEL
               : isFinishing
-                ? "Завершаем..."
-                : "Завершить интервью"}
+                ? FINISHING_LABEL
+                : FINISH_LABEL}
         </button>
       </section>
 
@@ -229,30 +240,36 @@ export default function RoomPage() {
 
       {isFeedbackOpen ? (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.35)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "24px",
-          }}
+          className={styles.feedbackOverlay}
+          onClick={() => setIsFeedbackOpen(false)}
         >
           <div
-            style={{
-              backgroundColor: "#ffffff",
-              color: "#111111",
-              width: "100%",
-              maxWidth: "720px",
-              padding: "24px",
-            }}
+            className={styles.feedbackModal}
+            onClick={(event) => event.stopPropagation()}
           >
-            <h3>Feedback по интервью</h3>
-            <p style={{ whiteSpace: "pre-wrap" }}>{feedback}</p>
-            <button type="button" onClick={() => setIsFeedbackOpen(false)}>
-              Закрыть
-            </button>
+            <div className={styles.feedbackHeader}>
+              <h3>{FEEDBACK_TITLE}</h3>
+              <button
+                type="button"
+                className={styles.feedbackCloseIcon}
+                onClick={() => setIsFeedbackOpen(false)}
+                aria-label={`${CLOSE_LABEL} feedback`}
+              >
+                x
+              </button>
+            </div>
+            <div className={styles.feedbackBody}>
+              <p>{feedback}</p>
+            </div>
+            <div className={styles.feedbackFooter}>
+              <button
+                type="button"
+                className={styles.feedbackCloseButton}
+                onClick={() => setIsFeedbackOpen(false)}
+              >
+                {CLOSE_LABEL}
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
