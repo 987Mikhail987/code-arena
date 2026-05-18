@@ -43,6 +43,7 @@ export default function Chat({
 }: ChatProps) {
   const [inputValue, setInputValue] = useState("");
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     const container = messagesContainerRef.current;
@@ -57,6 +58,17 @@ export default function Chat({
     });
   }, [messages]);
 
+  useEffect(() => {
+    const textarea = inputRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    textarea.style.height = "0px";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
+  }, [inputValue]);
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -68,6 +80,13 @@ export default function Chat({
 
     onSendMessage?.(trimmedValue);
     setInputValue("");
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      handleSubmit(event);
+    }
   };
 
   return (
@@ -98,10 +117,12 @@ export default function Chat({
       </div>
 
       <form className={styles.form} onSubmit={handleSubmit}>
-        <input
-          type="text"
+        <textarea
+          ref={inputRef}
+          rows={1}
           value={inputValue}
           onChange={(event) => setInputValue(event.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder={disabled ? "Интервью завершено" : placeholder}
           disabled={disabled}
         />

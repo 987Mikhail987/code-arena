@@ -23,24 +23,11 @@ function buildFallbackFirstMessage(level, programmingLanguage, topic) {
     `Уровень: ${level}.`,
     `Язык программирования: ${programmingLanguage}.`,
     topic ? `Тема: ${topic}.` : "",
-    "Первая задача:",
-    "Опиши, как бы ты решил задачу по выбранной теме, и затем напиши рабочее решение в редакторе.",
+    "Начнём как на реальном собеседовании: сначала несколько теоретических вопросов, затем перейдём к практической задаче.",
+    "Первый вопрос: объясни ключевую идею выбранной темы и назови типичные ошибки, которые могут возникнуть при её использовании.",
   ]
     .filter(Boolean)
     .join("\n\n");
-}
-
-function buildFallbackFirstTask(programmingLanguage, topic) {
-  return {
-    description: [
-      topic
-        ? `Реши практическую задачу по теме "${topic}".`
-        : "Реши практическую задачу по выбранной теме.",
-      "Опиши подход и напиши рабочее решение в редакторе.",
-    ].join(" "),
-    starterCode: "// Напишите решение здесь",
-    editorLanguage: programmingLanguage,
-  };
 }
 
 function buildSessionMessages(session) {
@@ -187,8 +174,7 @@ class SessionController {
               topic.trim(),
             ),
             metadata: {
-              itemType: "practice",
-              task: buildFallbackFirstTask(programmingLanguage, topic.trim()),
+              itemType: "theory",
             },
           });
         }
@@ -368,7 +354,9 @@ class SessionController {
       const resultMessages = buildSessionMessages(session);
       const contextLength = AiService.getContextLength({
         topic: session.topic,
+        message: content.trim(),
         messages: resultMessages,
+        code: code.trim(),
       });
 
       if (contextLength >= AiService.AI_CONTEXT_SOFT_LIMIT) {
@@ -421,7 +409,9 @@ class SessionController {
         difficulty: session.level,
         programmingLanguage: session.programming_language,
         topic: session.topic,
-        messages: session.messages,
+        message: content.trim() || "Проверь моё решение",
+        messages: resultMessages,
+        code: code.trim(),
       });
 
       const assistantMessage = await MessageService.createSessionMessage(sessionId, {

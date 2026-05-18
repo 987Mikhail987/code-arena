@@ -11,6 +11,7 @@ const { Agent } = require("node:https");
 
 const AI_CONTEXT_LIMIT = 6000;
 const AI_CONTEXT_SOFT_LIMIT = 4800;
+const THEORY_QUESTIONS_BEFORE_FIRST_TASK = 2;
 
 class AiService {
   static get AI_CONTEXT_LIMIT() {
@@ -102,12 +103,22 @@ class AiService {
 
   static getPreferredNextItemType(messages = [], isFirstRequest = false) {
     if (isFirstRequest) {
-      return "practice";
+      return "theory";
     }
 
     const { practiceCount, theoryCount } = this.getInterviewItemStats(messages);
 
-    if (practiceCount - theoryCount * 2 >= 2) {
+    if (practiceCount === 0) {
+      return theoryCount < THEORY_QUESTIONS_BEFORE_FIRST_TASK
+        ? "theory"
+        : "practice";
+    }
+
+    const totalInterviewItems = practiceCount + theoryCount;
+    const currentTheoryRatio =
+      totalInterviewItems > 0 ? theoryCount / totalInterviewItems : 0;
+
+    if (practiceCount >= 2 && currentTheoryRatio < 0.3) {
       return "theory";
     }
 
@@ -133,8 +144,10 @@ class AiService {
       normalizedTopic
         ? `Тема: ${normalizedTopic}.`
         : "Тема не указана.",
-      "Первое сообщение: приветствие и практическая задача с task.description, task.starterCode, task.editorLanguage.",
-      "Дальше держи баланс: 30% теория, 70% практика.",
+      "Первые шаги интервью должны быть теоретическими вопросами без задачи в редакторе.",
+      `До первой практической задачи задай ${THEORY_QUESTIONS_BEFORE_FIRST_TASK} теоретических вопроса.`,
+      "После теоретического блока выдай практическую задачу, связанную с обсужденными вопросами.",
+      "Дальше держи баланс: около 30% теория, 70% практика.",
       `Предпочтительный следующий шаг: ${nextItemDescription}.`,
       preferredNextItemType === "theory"
         ? "Сейчас обязательно задай именно теоретический вопрос без starterCode и с task:null."
@@ -143,7 +156,8 @@ class AiService {
       "Практика: task с description, starterCode, editorLanguage.",
       "Если пользователь задаёт уточняющий вопрос, дай направление или 1-2 подсказки без нового вопроса, если он не нужен.",
       "Если есть код, оцени правильность, алгоритм, сложность, читаемость и крайние случаи.",
-      "Если ответ верен или задача решена, выдай следующий вопрос или задачу.",
+      "Если ответ на теорию принят, переходи к следующему теоретическому вопросу или к практической задаче по сценарию.",
+      "Если практическая задача решена, выдай следующий вопрос или задачу.",
       "После слабого ответа дай шаг легче, после хорошего - сложнее, после среднего - того же уровня.",
       "Никогда не давай готовое решение, полный код или полный ответ за пользователя.",
       "Отвечай только на русском языке.",
@@ -162,9 +176,9 @@ class AiService {
       `Начни тренировочное интервью для уровня ${difficulty}.`,
       `Язык: ${programmingLanguage}.`,
       normalizedTopic ? `Тема: ${normalizedTopic}.` : "",
-      "Поздоровайся и выдай первую практическую задачу.",
-      "Поле task обязательно должно быть заполнено.",
-      "В task обязательно должны быть description, starterCode и editorLanguage.",
+      "Поздоровайся как интервьюер и задай первый теоретический вопрос.",
+      "Не выдавай практическую задачу в первом сообщении.",
+      "Поле task обязательно должно быть null.",
       "Не давай готовое решение.",
     ]
       .filter(Boolean)
@@ -199,6 +213,39 @@ class AiService {
         role: "user",
         content:
           "Дай следующий теоретический вопрос. В поле task обязательно верни null.",
+      },
+    ];
+  }
+
+  static buildForcedPracticeMessages({
+    difficulty,
+    programmingLanguage,
+    topic,
+    messages,
+  }) {
+    const normalizedTopic = topic?.trim();
+    const history = this.normalizeMessages(messages).slice(-10);
+
+    return [
+      {
+        role: "system",
+        content: [
+          "Ты технический интервьюер CodeArena.",
+          `Уровень: ${difficulty}.`,
+          `Язык: ${programmingLanguage}.`,
+          normalizedTopic ? `Тема: ${normalizedTopic}.` : "Тема не указана.",
+          "Сгенерируй практическую задачу на основе предыдущих теоретических вопросов и ответов пользователя.",
+          "Задача должна быть похожа на реальное техническое собеседование.",
+          "Не давай готовое решение.",
+          "Верни только валидный JSON без markdown.",
+          'Формат: {"chatMessage":"string","task":{"description":"string","starterCode":"string","editorLanguage":"string"},"review":null}.',
+        ].join(" "),
+      },
+      ...history,
+      {
+        role: "user",
+        content:
+          "Теперь перейди от теории к практической задаче. Поле task обязательно должно быть заполнено.",
       },
     ];
   }
@@ -330,7 +377,7 @@ class AiService {
   }
 
   static async getClarificationDecision(client, payload) {
-    const { difficulty, programmingLanguage, topic, message, messages } =
+    const { difficulty, programmingLanguage, topic, message, messages, code } =
       payload;
 
     const history = this.normalizeMessages(messages);
@@ -344,7 +391,7 @@ class AiService {
           "Определи, достаточно ли данных для основного ответа пользователю.",
           'Если данных достаточно, ответь строго JSON: {"needsClarification": false}.',
           'Если нужны уточнения, ответь строго JSON: {"needsClarification": true, "clarificationQuestion": "..."}.',
-          "Если в истории уже есть задача, решение пользователя или код, обычно данных достаточно.",
+          "Если в истории уже есть теоретический вопрос, задача, решение пользователя или код, обычно данных достаточно.",
           "Не добавляй пояснений вне JSON.",
         ].join(" "),
       },
@@ -356,6 +403,7 @@ class AiService {
           topic: topic || null,
           message: normalizedMessage || null,
           messages: history,
+          code: typeof code === "string" && code.trim() ? code.trim() : null,
         }),
       },
     ]);
@@ -608,6 +656,7 @@ class AiService {
     topic,
     message,
     messages,
+    code,
   }) {
     const client = this.createClient();
     const normalizedMessages = this.normalizeMessages(messages);
@@ -628,6 +677,7 @@ class AiService {
           topic,
           message,
           messages,
+          code,
         },
       );
 
@@ -654,7 +704,15 @@ class AiService {
       ...normalizedMessages,
     ];
 
-    if (normalizedMessage) {
+    const lastHistoryMessage = normalizedMessages.at(-1);
+    const shouldAppendCurrentMessage =
+      normalizedMessage &&
+      !(
+        lastHistoryMessage?.role === "user" &&
+        lastHistoryMessage.content === normalizedMessage
+      );
+
+    if (shouldAppendCurrentMessage) {
       chatMessages.push({
         role: "user",
         content: normalizedMessage,
@@ -696,6 +754,39 @@ class AiService {
           },
         },
         "theory",
+      );
+    }
+
+    if (preferredNextItemType === "practice" && !aiData.metadata?.task) {
+      const practiceAnswer = await this.requestChat(
+        client,
+        this.buildForcedPracticeMessages({
+          difficulty,
+          programmingLanguage,
+          topic,
+          messages,
+        }),
+      );
+      const practiceData = this.parseAiResponse(
+        practiceAnswer,
+        programmingLanguage,
+      );
+
+      return this.withInterviewItemType(
+        practiceData.metadata?.task
+          ? practiceData
+          : {
+              ...practiceData,
+              metadata: {
+                ...(practiceData.metadata || {}),
+                task: {
+                  description: practiceData.answer,
+                  starterCode: "// Напишите решение здесь",
+                  editorLanguage: programmingLanguage,
+                },
+              },
+            },
+        "practice",
       );
     }
 
