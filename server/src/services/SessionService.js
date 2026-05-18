@@ -80,6 +80,23 @@ class SessionService {
 
     return session;
   }
+
+  static async deleteUserSession(sessionId, userId) {
+    return Session.destroy({
+      where: {
+        id: sessionId,
+        user_id: userId,
+      },
+    });
+  }
+
+  static async deleteUserSessions(userId) {
+    return Session.destroy({
+      where: {
+        user_id: userId,
+      },
+    });
+  }
 }
 
 module.exports = SessionService;

@@ -258,6 +258,60 @@ class SessionController {
     }
   }
 
+  static async deleteUserSessions(req, res) {
+    const { user } = res.locals;
+
+    try {
+      const deletedCount = await SessionService.deleteUserSessions(user.id);
+
+      return res.status(200).json(
+        formatResponse(200, "История тренировочных сессий очищена", {
+          deletedCount,
+        }),
+      );
+    } catch (error) {
+      console.log("======== SessionController.deleteUserSessions =========");
+      console.log(error);
+      return res
+        .status(500)
+        .json(formatResponse(500, "Ошибка при очистке истории сессий"));
+    }
+  }
+
+  static async deleteUserSession(req, res) {
+    const { user } = res.locals;
+    const { sessionId } = req.params;
+
+    if (Number.isNaN(Number(sessionId))) {
+      return res
+        .status(400)
+        .json(formatResponse(400, "Неверный формат ID сессии"));
+    }
+
+    try {
+      const deletedCount = await SessionService.deleteUserSession(
+        sessionId,
+        user.id,
+      );
+
+      if (deletedCount === 0) {
+        return res
+          .status(404)
+          .json(formatResponse(404, "Тренировочная сессия не найдена"));
+      }
+
+      return res
+        .status(200)
+        .json(formatResponse(200, "Тренировочная сессия удалена"));
+    } catch (error) {
+      console.log("======== SessionController.deleteUserSession =========");
+      console.log(error);
+      return res
+        .status(500)
+        .json(formatResponse(500, "Ошибка при удалении сессии"));
+    }
+  }
+
   static async finishSession(req, res) {
     const { user } = res.locals;
     const { sessionId } = req.params;

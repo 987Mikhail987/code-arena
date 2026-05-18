@@ -2,7 +2,6 @@ import axios from "axios";
 import { axiosInstance } from "@/shared/lib/axiosInstance";
 import type {
   SessionType,
-  MessageType,
   CreateSessionParamsType,
   CreateMessageParamsType,
   CreateMessageResponseType,
@@ -47,6 +46,34 @@ export default class SessionApi {
   ): Promise<ApiResponse<SessionType>> {
     try {
       const response = await axiosInstance.get(`/sessions/${sessionId}`);
+      return response.data;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response) {
+        return error.response.data;
+      }
+      throw error;
+    }
+  }
+
+  static async deleteSession(
+    sessionId: string,
+  ): Promise<ApiResponse<null>> {
+    try {
+      const response = await axiosInstance.delete(`/sessions/${sessionId}`);
+      return response.data;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response) {
+        return error.response.data;
+      }
+      throw error;
+    }
+  }
+
+  static async deleteAllSessions(): Promise<
+    ApiResponse<{ deletedCount: number }>
+  > {
+    try {
+      const response = await axiosInstance.delete("/sessions");
       return response.data;
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response) {

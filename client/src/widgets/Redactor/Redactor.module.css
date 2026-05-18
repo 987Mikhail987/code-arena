@@ -54,10 +54,8 @@
 }
 
 .terminal {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  display: grid;
+  gap: 12px;
   padding: 14px;
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -66,8 +64,14 @@
     var(--control-bg);
 }
 
-.terminal h3,
-.terminal p {
+.terminalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.terminal h3 {
   margin: 0;
 }
 
@@ -75,13 +79,29 @@
   font-size: 15px;
 }
 
-.terminal p {
-  margin-top: 4px;
-  color: var(--foreground-muted);
-  font-size: 13px;
+.terminalActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.terminal button {
+.terminalOutput {
+  min-height: 72px;
+  max-height: 120px;
+  margin: 0;
+  overflow: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: color-mix(in srgb, #000 34%, transparent);
+  color: var(--foreground-muted);
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.terminalActions button {
   min-height: 42px;
   padding: 0 18px;
   border: 0;
@@ -92,13 +112,23 @@
   transition: transform 0.2s ease;
 }
 
-.terminal button:hover {
+.terminalActions button:hover {
   transform: translateY(-1px);
 }
 
+.terminalActions button:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+  transform: none;
+}
+
 @media (max-width: 560px) {
-  .terminal {
+  .terminalHeader {
     align-items: stretch;
+    flex-direction: column;
+  }
+
+  .terminalActions {
     flex-direction: column;
   }
 }
