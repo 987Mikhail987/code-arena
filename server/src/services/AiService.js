@@ -30,6 +30,10 @@ class AiService {
       "Вместо полного решения дай только направление, 1-2 подсказки по алгоритму, укажи на следующий шаг или предложи задачу полегче.",
       "Отвечай только на русском языке.",
       "Всегда отвечай строго валидным JSON без markdown.",
+      "Ответ должен быть валидным JSON, который можно сразу передать в JSON.parse.",
+      "Все двойные кавычки внутри строк обязательно экранируй обратным слэшем.",
+      "В текстовых примерах внутри JSON используй одинарные кавычки вместо двойных, например 'madam', а не \"madam\".",
+      "Не добавляй текст до JSON и после JSON.",
       'Формат: {"chatMessage":"string","task":null или {"description":"string","starterCode":"string","editorLanguage":"string"},"review":null или {"summary":"string","improvements":["string"],"score":number}}.',
       "chatMessage показывается пользователю в чате.",
       "task заполняй только если выдаешь новую задачу или новый стартовый код.",
@@ -205,50 +209,224 @@ class AiService {
     return this.parseClarificationResponse(answer);
   }
 
+  // static extractJson(text) {
+  //   const normalized = text.trim();
+
+  //   try {
+  //     return JSON.parse(normalized);
+  //   } catch {
+  //     const match = normalized.match(/\{[\s\S]*\}/);
+
+  //     if (!match) {
+  //       throw new Error("AI не вернул JSON");
+  //     }
+
+  //     return JSON.parse(match[0]);
+  //   }
+  // }
+
   static extractJson(text) {
-    const normalized = text.trim();
+    const source = String(text || "").trim();
 
-    try {
-      return JSON.parse(normalized);
-    } catch {
-      const match = normalized.match(/\{[\s\S]*\}/);
+    let start = -1;
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
 
-      if (!match) {
-        throw new Error("AI не вернул JSON");
+    for (let i = 0; i < source.length; i += 1) {
+      const char = source[i];
+
+      if (start === -1) {
+        if (char === "{") {
+          start = i;
+          depth = 1;
+        }
+        continue;
       }
 
-      return JSON.parse(match[0]);
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+
+      if (char === "\\") {
+        escaped = true;
+        continue;
+      }
+
+      if (char === '"') {
+        inString = !inString;
+        continue;
+      }
+
+      if (inString) {
+        continue;
+      }
+
+      if (char === "{") {
+        depth += 1;
+        continue;
+      }
+
+      if (char === "}") {
+        depth -= 1;
+
+        if (depth === 0) {
+          return JSON.parse(source.slice(start, i + 1));
+        }
+      }
     }
+
+    throw new Error("AI не вернул валидный JSON");
   }
+
+  static extractLooseAiPayload(text) {
+    const source = String(text || "").trim();
+
+    const chatMessageMatch = source.match(
+      /"chatMessage"\s*:\s*"([\s\S]*?)"\s*,\s*"task"\s*:/,
+    );
+
+    const chatMessage = chatMessageMatch ? chatMessageMatch[1].trim() : "";
+
+    const taskKeyIndex = source.search(/"task"\s*:/);
+
+    if (taskKeyIndex === -1) {
+      throw new Error("AI не вернул task");
+    }
+
+    const taskValueStart = source.indexOf(":", taskKeyIndex) + 1;
+    const reviewKeyMatch = source
+      .slice(taskValueStart)
+      .match(/,\s*"review"\s*:/);
+
+    const taskRaw = reviewKeyMatch
+      ? source
+          .slice(taskValueStart, taskValueStart + reviewKeyMatch.index)
+          .trim()
+      : source.slice(taskValueStart).trim().replace(/}\s*$/, "");
+
+    let task = null;
+
+    if (taskRaw !== "null") {
+      task = JSON.parse(taskRaw);
+    }
+
+    let review = null;
+
+    const reviewKeyIndex = source.search(/"review"\s*:/);
+
+    if (reviewKeyIndex !== -1) {
+      const reviewValueStart = source.indexOf(":", reviewKeyIndex) + 1;
+      const reviewRaw = source
+        .slice(reviewValueStart)
+        .trim()
+        .replace(/}\s*$/, "");
+
+      if (reviewRaw && reviewRaw !== "null") {
+        review = JSON.parse(reviewRaw);
+      }
+    }
+
+    return {
+      chatMessage,
+      task,
+      review,
+    };
+  }
+
+  static normalizeAiPayload(parsed, answer, programmingLanguage) {
+    const chatMessage = String(
+      parsed.chatMessage || parsed.answer || "",
+    ).trim();
+
+    const task = parsed.task
+      ? {
+          description: String(parsed.task.description || "").trim(),
+          starterCode: String(parsed.task.starterCode || "").trim(),
+          editorLanguage: String(
+            parsed.task.editorLanguage || programmingLanguage,
+          ).trim(),
+        }
+      : null;
+
+    const review = parsed.review
+      ? {
+          summary: String(parsed.review.summary || "").trim(),
+          improvements: Array.isArray(parsed.review.improvements)
+            ? parsed.review.improvements.map((item) => String(item))
+            : [],
+          score:
+            typeof parsed.review.score === "number"
+              ? parsed.review.score
+              : null,
+        }
+      : null;
+
+    return {
+      answer: chatMessage || this.cleanFallbackAnswer(answer),
+      metadata: {
+        task,
+        review,
+      },
+    };
+  }
+
+  static cleanFallbackAnswer(text) {
+    return String(text || "")
+      .replace(/^```(?:json|javascript|typescript|js|ts|python)?/i, "")
+      .replace(/```$/i, "")
+      .replace(/```[\s\S]*?```/g, "")
+      .trim();
+  }
+
+  // static parseAiResponse(answer, programmingLanguage) {
+  //   try {
+  //     const parsed = this.extractJson(answer);
+
+  //     const chatMessage = String(
+  //       parsed.chatMessage || parsed.answer || "",
+  //     ).trim();
+
+  //     return {
+  //       answer: chatMessage || answer.trim(),
+  //       metadata: {
+  //         task: parsed.task
+  //           ? {
+  //               description: String(parsed.task.description || "").trim(),
+  //               starterCode: String(parsed.task.starterCode || "").trim(),
+  //               editorLanguage: String(
+  //                 parsed.task.editorLanguage || programmingLanguage,
+  //               ).trim(),
+  //             }
+  //           : null,
+  //         review: parsed.review || null,
+  //       },
+  //     };
+  //   } catch {
+  //     return {
+  //       answer: answer.trim(),
+  //       metadata: null,
+  //     };
+  //   }
+  // }
 
   static parseAiResponse(answer, programmingLanguage) {
     try {
       const parsed = this.extractJson(answer);
 
-      const chatMessage = String(
-        parsed.chatMessage || parsed.answer || "",
-      ).trim();
-
-      return {
-        answer: chatMessage || answer.trim(),
-        metadata: {
-          task: parsed.task
-            ? {
-                description: String(parsed.task.description || "").trim(),
-                starterCode: String(parsed.task.starterCode || "").trim(),
-                editorLanguage: String(
-                  parsed.task.editorLanguage || programmingLanguage,
-                ).trim(),
-              }
-            : null,
-          review: parsed.review || null,
-        },
-      };
+      return this.normalizeAiPayload(parsed, answer, programmingLanguage);
     } catch {
-      return {
-        answer: answer.trim(),
-        metadata: null,
-      };
+      try {
+        const parsed = this.extractLooseAiPayload(answer);
+
+        return this.normalizeAiPayload(parsed, answer, programmingLanguage);
+      } catch {
+        return {
+          answer: this.cleanFallbackAnswer(answer),
+          metadata: null,
+        };
+      }
     }
   }
 
