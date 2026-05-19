@@ -3,7 +3,6 @@
 import Editor, { type OnMount } from "@monaco-editor/react";
 import React, { useEffect, useRef, useState } from "react";
 import * as Y from "yjs";
-import { MonacoBinding } from "y-monaco";
 import type { MonacoLanguage } from "@/widgets/Redactor/Redactor";
 import type { LiveSocket } from "@/shared/lib/liveSocket";
 import styles from "./LiveInterviewRoom.module.css";
@@ -26,7 +25,7 @@ export function LiveCodeEditor({
   onCodeChange,
 }: LiveCodeEditorProps) {
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
-  const bindingRef = useRef<MonacoBinding | null>(null);
+  const bindingRef = useRef<{ destroy: () => void } | null>(null);
   const docRef = useRef<Y.Doc | null>(null);
   const [isSynced, setIsSynced] = useState(false);
 
@@ -35,16 +34,23 @@ export function LiveCodeEditor({
       return;
     }
 
+    let isDisposed = false;
     const activeSocket = socket;
     const doc = new Y.Doc();
     const text = doc.getText("code");
     docRef.current = doc;
 
-    function bindEditor() {
+    async function bindEditor() {
       const editor = editorRef.current;
       const model = editor?.getModel();
 
       if (!editor || !model || bindingRef.current) {
+        return;
+      }
+
+      const { MonacoBinding } = await import("y-monaco");
+
+      if (isDisposed || bindingRef.current) {
         return;
       }
 
@@ -55,7 +61,7 @@ export function LiveCodeEditor({
 
     function handleCodeSync(update: number[]) {
       Y.applyUpdate(doc, Uint8Array.from(update), "remote");
-      bindEditor();
+      void bindEditor();
     }
 
     function handleCodeUpdate(update: number[]) {
@@ -92,6 +98,7 @@ export function LiveCodeEditor({
     }
 
     return () => {
+      isDisposed = true;
       activeSocket.off("live:code:sync", handleCodeSync);
       activeSocket.off("live:code:update", handleCodeUpdate);
       doc.off("update", handleLocalUpdate);
