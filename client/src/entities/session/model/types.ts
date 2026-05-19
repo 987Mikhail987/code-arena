@@ -13,9 +13,12 @@ export type ProgrammingLanguageType =
   | "csharp";
 
 export type MessageMetadataType = {
-  source?: "chat" | "editor";
+  source?: "chat" | "editor" | "live-chat";
   code?: string | null;
   finishReason?: string;
+  senderId?: number;
+  senderName?: string;
+  senderRole?: string;
   itemType?: "practice" | "theory";
   task?: {
     description?: string;
@@ -56,6 +59,14 @@ export type SessionType = {
   status: SessionStatusType;
   programming_language?: ProgrammingLanguageType;
   programmingLanguage?: ProgrammingLanguageType;
+  public_id?: string | null;
+  publicId?: string | null;
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
   messages?: MessageType[];
   result?: SessionResultType;
   createdAt: string;

@@ -7,6 +7,7 @@ import type {
   SessionType,
 } from "@/entities/session/model/types";
 import Chat from "@/widgets/ChatwithAi/ChatwithAi";
+import { LiveInterviewRoom } from "@/widgets/LiveInterviewRoom/LiveInterviewRoom";
 import Redactor from "@/widgets/Redactor/Redactor";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
@@ -37,6 +38,7 @@ export default function RoomPage() {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const isComplited = status === "complited";
+  const isLiveSession = session?.type === "live";
   const isRoomDisabled =
     isLoadingSession || Boolean(sessionError) || isFinishing || isComplited;
 
@@ -135,17 +137,20 @@ export default function RoomPage() {
     setFinishError("");
 
     try {
-      const response = await SessionApi.finishSession(params.id, {
-        code: editorCode,
-        programmingLanguage: editorLanguage,
-      });
+      const response = await SessionApi.finishSession(
+        session?.public_id || session?.publicId || params.id,
+        {
+          code: editorCode,
+          programmingLanguage: editorLanguage,
+        },
+      );
 
       if (response.statusCode === 200) {
         setSession(response.data.session);
         setStatus(response.data.session.status);
         setFeedback(response.data.feedback);
         window.localStorage.removeItem(editorStorageKey);
-        setIsFeedbackOpen(true);
+        setIsFeedbackOpen(Boolean(response.data.feedback));
         return;
       }
 
@@ -276,22 +281,41 @@ export default function RoomPage() {
       {sessionError ? <p className={styles.error}>{sessionError}</p> : null}
       {finishError ? <p className={styles.error}>{finishError}</p> : null}
 
-      <div className={styles.workspace}>
-        <Chat
-          messages={session?.messages ?? []}
+      {session && isLiveSession ? (
+        <LiveInterviewRoom
+          session={session}
           disabled={isRoomDisabled}
+
+          initialCode={editorCode || starterCode}
+
           isTyping={isWaitingForAi}
           onSendMessage={handleSendChatMessage}
         />
         <Redactor
           code={editorCode}
           disabled={isRoomDisabled}
-          initialCode={starterCode}
+          
+
           language={editorLanguage}
-          onChange={updateEditorCode}
-          onSubmitCode={handleSubmitCode}
+          onCodeChange={updateEditorCode}
         />
-      </div>
+      ) : (
+        <div className={styles.workspace}>
+          <Chat
+            messages={session?.messages ?? []}
+            disabled={isRoomDisabled}
+            onSendMessage={handleSendChatMessage}
+          />
+          <Redactor
+            code={editorCode}
+            disabled={isRoomDisabled}
+            initialCode={starterCode}
+            language={editorLanguage}
+            onChange={updateEditorCode}
+            onSubmitCode={handleSubmitCode}
+          />
+        </div>
+      )}
 
       {isFeedbackOpen ? (
         <div

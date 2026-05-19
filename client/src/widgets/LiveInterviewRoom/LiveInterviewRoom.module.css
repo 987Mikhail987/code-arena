@@ -1,0 +1,177 @@
+.liveRoom {
+  display: grid;
+  gap: 14px;
+}
+
+.status,
+.errorStatus {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background-color: color-mix(in srgb, var(--surface) 88%, transparent);
+  color: var(--foreground-muted);
+}
+
+.errorStatus {
+  border-color: color-mix(in srgb, var(--danger) 36%, transparent);
+  background-color: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.95fr) minmax(360px, 1.25fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.chat,
+.editorShell {
+  height: 70vh;
+  max-height: 70vh;
+  min-height: 520px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--surface) 90%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+}
+
+.chat h3,
+.editorHeader h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) color-mix(in srgb, var(--surface-muted) 62%, transparent);
+}
+
+.emptyState,
+.message,
+.ownMessage {
+  padding: 12px 14px;
+  border-radius: 8px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.emptyState {
+  border: 1px dashed var(--border);
+  color: var(--foreground-muted);
+}
+
+.message {
+  align-self: flex-start;
+  max-width: 88%;
+  background-color: color-mix(in srgb, var(--foreground-muted) 10%, transparent);
+}
+
+.ownMessage {
+  align-self: flex-end;
+  max-width: 88%;
+  background-color: var(--accent-muted);
+}
+
+.form {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.form textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  max-height: 160px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--control-bg);
+  color: var(--foreground);
+  font: inherit;
+  outline: none;
+  resize: none;
+  overflow-y: auto;
+  line-height: 1.5;
+}
+
+.form textarea::placeholder {
+  color: var(--foreground-muted);
+}
+
+.form textarea:focus {
+  border-color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+
+.form button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff7f4;
+  font-weight: 700;
+}
+
+.form button:disabled {
+  opacity: 0.72;
+}
+
+.editorShell {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+}
+
+.editorHeader {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.editorHeader span {
+  color: var(--foreground-muted);
+  font-size: 13px;
+}
+
+.editorViewport {
+  min-height: 0;
+}
+
+@media (max-width: 920px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .form {
+    flex-direction: column;
+  }
+
+  .form button {
+    width: 100%;
+  }
+}

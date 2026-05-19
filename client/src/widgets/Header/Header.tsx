@@ -22,6 +22,11 @@ export default function Header({ onToggleTheme }: HeaderProps) {
   const [isCheckingSession, setIsCheckingSession] = useState(false);
 
   async function handleInterviewClick() {
+    if (user?.role === "intervier") {
+      router.push("/profile");
+      return;
+    }
+
     setIsCheckingSession(true);
 
     try {
