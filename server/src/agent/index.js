@@ -93,9 +93,10 @@ async function getAnswer(messages) {
     if (answer) {
       return answer;
     }
-  } catch {}
+  } catch {
 
-  return fallbackTool.invoke({});
+    return fallbackTool.invoke({});
+  }
 }
 
 module.exports = {
