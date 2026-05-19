@@ -285,17 +285,7 @@ export default function RoomPage() {
         <LiveInterviewRoom
           session={session}
           disabled={isRoomDisabled}
-
           initialCode={editorCode || starterCode}
-
-          isTyping={isWaitingForAi}
-          onSendMessage={handleSendChatMessage}
-        />
-        <Redactor
-          code={editorCode}
-          disabled={isRoomDisabled}
-          
-
           language={editorLanguage}
           onCodeChange={updateEditorCode}
         />
@@ -304,6 +294,7 @@ export default function RoomPage() {
           <Chat
             messages={session?.messages ?? []}
             disabled={isRoomDisabled}
+            isTyping={isWaitingForAi}
             onSendMessage={handleSendChatMessage}
           />
           <Redactor
