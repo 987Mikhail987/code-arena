@@ -101,6 +101,7 @@ function getVoiceErrorMessage(errorCode: SpeechRecognitionErrorEvent["error"]) {
 export default function Chat({
   messages = [],
   onSendMessage,
+  isTyping = false,
   placeholder = "Напишите сообщение...",
   title = "Чат с AI",
   disabled = false,
@@ -133,7 +134,7 @@ export default function Chat({
       top: container.scrollHeight,
       behavior: "smooth",
     });
-  }, [messages]);
+  }, [isTyping, messages]);
 
   useEffect(() => {
     const textarea = inputRef.current;
@@ -285,6 +286,11 @@ export default function Chat({
             </div>
           ))
         )}
+        {isTyping ? (
+          <div className={styles.typingIndicator}>
+            <strong>AI:</strong> Отвечаю...
+          </div>
+        ) : null}
       </div>
 
       {voiceError ? <p className={styles.voiceError}>{voiceError}</p> : null}
