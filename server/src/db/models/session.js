@@ -34,6 +34,7 @@ module.exports = (sequelize, DataTypes) => {
       status: DataTypes.ENUM(...SESSION_STATUSES),
       level: DataTypes.ENUM(...SESSION_LEVELS),
       programming_language: DataTypes.ENUM(...PROGRAMMING_LANGUAGES),
+      public_id: DataTypes.TEXT,
       topic: DataTypes.TEXT,
       result: DataTypes.JSONB,
     },

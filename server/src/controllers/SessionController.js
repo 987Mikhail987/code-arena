@@ -2,6 +2,7 @@ const AiService = require("../services/AiService");
 const MessageService = require("../services/MessageService");
 const SessionService = require("../services/SessionService");
 const formatResponse = require("../utils/formatResponse");
+const generatePublicId = require("../utils/generatePublicId");
 
 const SESSION_TYPES = ["ai", "live"];
 const SESSION_LEVELS = ["junior", "middle", "senior"];
@@ -143,6 +144,7 @@ class SessionController {
         level,
         topic: topic.trim(),
         programming_language: programmingLanguage,
+        public_id: type === "live" ? generatePublicId() : null,
       });
 
       let firstMessage = null;
@@ -199,7 +201,7 @@ class SessionController {
     const { user } = res.locals;
 
     try {
-      const sessions = await SessionService.getUserSessions(user.id);
+      const sessions = await SessionService.getUserSessions(user);
 
       return res
         .status(200)
@@ -217,14 +219,11 @@ class SessionController {
     const { user } = res.locals;
     const { sessionId } = req.params;
 
-    if (Number.isNaN(Number(sessionId))) {
-      return res
-        .status(400)
-        .json(formatResponse(400, "Неверный формат ID сессии"));
-    }
-
     try {
-      const session = await SessionService.getUserSessionById(sessionId, user.id);
+      const session = await SessionService.getSessionByIdentifier(
+        sessionId,
+        user,
+      );
 
       if (!session) {
         return res
@@ -303,14 +302,11 @@ class SessionController {
     const { sessionId } = req.params;
     const { code = "", programmingLanguage } = req.body || {};
 
-    if (Number.isNaN(Number(sessionId))) {
-      return res
-        .status(400)
-        .json(formatResponse(400, "Неверный формат ID сессии"));
-    }
-
     try {
-      const session = await SessionService.getUserSessionById(sessionId, user.id);
+      const session = await SessionService.getSessionByIdentifier(
+        sessionId,
+        user,
+      );
 
       if (!session) {
         return res
@@ -323,6 +319,30 @@ class SessionController {
           formatResponse(200, "Тренировочная сессия завершена", {
             session,
             feedback: session.result?.feedback || "",
+          }),
+        );
+      }
+
+      if (session.type === "live") {
+        const resultMessages = buildSessionMessages(session);
+        const finishedSession = await SessionService.finishSession(
+          session.id,
+          session.user_id,
+          {
+            messages: resultMessages,
+            code: typeof code === "string" ? code : "",
+            feedback: "",
+            finishReason: "manual",
+          },
+        );
+
+        return res.status(200).json(
+          formatResponse(200, "Live-интервью завершено", {
+            session: {
+              ...finishedSession.get(),
+              messages: resultMessages,
+            },
+            feedback: "",
           }),
         );
       }

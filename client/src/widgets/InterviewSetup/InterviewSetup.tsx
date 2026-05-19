@@ -41,12 +41,12 @@ export function InterviewSetup({
       });
 
       if (interview.statusCode === 201 && interview.data?.id) {
-        onStart(interview.data.id);
+        onStart(interview.data.public_id || interview.data.id);
         return;
       }
 
       if (interview.statusCode === 409 && interview.data?.id) {
-        onStart(interview.data.id);
+        onStart(interview.data.public_id || interview.data.id);
         return;
       }
 

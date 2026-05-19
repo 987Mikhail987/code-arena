@@ -191,24 +191,26 @@ export function ProfilePage(): ReactNode {
     setIsDeleting(false);
   }
 
-  async function toggleSessionDetails(sessionId: string) {
-    if (expandedSessionId === sessionId) {
+  async function toggleSessionDetails(session: SessionType) {
+    const sessionKey = session.public_id || session.publicId || session.id;
+
+    if (expandedSessionId === sessionKey) {
       setExpandedSessionId(null);
       return;
     }
 
-    setExpandedSessionId(sessionId);
+    setExpandedSessionId(sessionKey);
 
-    if (sessionDetailsById[sessionId]) {
+    if (sessionDetailsById[sessionKey]) {
       return;
     }
 
-    const response = await SessionApi.getSessionById(sessionId);
+    const response = await SessionApi.getSessionById(sessionKey);
 
     if (response.statusCode === 200) {
       setSessionDetailsById((prev) => ({
         ...prev,
-        [sessionId]: response.data,
+        [sessionKey]: response.data,
       }));
       return;
     }
@@ -311,19 +313,27 @@ export function ProfilePage(): ReactNode {
     <section className={styles.card}>
       <div className={styles.sectionHeader}>
         <div>
-          <h2 className={styles.cardTitle}>История собеседований</h2>
+          <h2 className={styles.cardTitle}>
+            {user.role === "intervier"
+              ? "Активные live-интервью кандидатов"
+              : "История собеседований"}
+          </h2>
           <p className={styles.sectionSubtitle}>
-            Прошлые сессии и сообщения внутри выбранного интервью.
+            {user.role === "intervier"
+              ? "Открытые комнаты, к которым можно подключиться для интервью."
+              : "Прошлые сессии и сообщения внутри выбранного интервью."}
           </p>
         </div>
-        <button
-          type="button"
-          className={styles.dangerButton}
-          onClick={clearHistoryHandler}
-          disabled={isLoadingSessions || sessions.length === 0 || isClearingHistory}
-        >
-          {isClearingHistory ? "Очищаем..." : "Очистить историю"}
-        </button>
+        {user.role === "candidate" ? (
+          <button
+            type="button"
+            className={styles.dangerButton}
+            onClick={clearHistoryHandler}
+            disabled={isLoadingSessions || sessions.length === 0 || isClearingHistory}
+          >
+            {isClearingHistory ? "Очищаем..." : "Очистить историю"}
+          </button>
+        ) : null}
       </div>
 
       {isLoadingSessions ? (
@@ -333,13 +343,18 @@ export function ProfilePage(): ReactNode {
         <p className={styles.formError}>{sessionsMessage}</p>
       ) : null}
       {!isLoadingSessions && sessions.length === 0 ? (
-        <p className={styles.message}>История пока пустая.</p>
+        <p className={styles.message}>
+          {user.role === "intervier"
+            ? "Активных live-интервью пока нет."
+            : "История пока пустая."}
+        </p>
       ) : null}
 
       <div className={styles.sessionsList}>
         {sessions.map((session) => {
-          const isExpanded = expandedSessionId === session.id;
-          const details = sessionDetailsById[session.id];
+          const sessionKey = session.public_id || session.publicId || session.id;
+          const isExpanded = expandedSessionId === sessionKey;
+          const details = sessionDetailsById[sessionKey];
           const messages = details?.messages ?? [];
           const isDeletingSession = deletingSessionId === session.id;
 
@@ -348,7 +363,11 @@ export function ProfilePage(): ReactNode {
               <div className={styles.sessionCardHeader}>
                 <div>
                   <h3>{session.topic}</h3>
-                  <p>{formatDate(session.createdAt)}</p>
+                  <p>
+                    {session.user?.name
+                      ? `${session.user.name} · ${formatDate(session.createdAt)}`
+                      : formatDate(session.createdAt)}
+                  </p>
                 </div>
                 <span className={styles.statusBadge}>
                   {session.status === "complited" ? "Завершено" : "Активно"}
@@ -373,7 +392,7 @@ export function ProfilePage(): ReactNode {
                 <button
                   type="button"
                   className={styles.secondaryButton}
-                  onClick={() => toggleSessionDetails(session.id)}
+                  onClick={() => toggleSessionDetails(session)}
                   disabled={isDeletingSession}
                 >
                   {isExpanded ? "Скрыть сообщения" : "Показать сообщения"}
@@ -381,19 +400,21 @@ export function ProfilePage(): ReactNode {
                 <button
                   type="button"
                   className={styles.primaryButton}
-                  onClick={() => router.push(`/room/${session.id}`)}
+                  onClick={() => router.push(`/room/${sessionKey}`)}
                   disabled={isDeletingSession}
                 >
                   Открыть интервью
                 </button>
-                <button
-                  type="button"
-                  className={styles.dangerButton}
-                  onClick={() => deleteSessionHandler(session.id)}
-                  disabled={isDeletingSession}
-                >
-                  {isDeletingSession ? "Удаляем..." : "Удалить"}
-                </button>
+                {user.role === "candidate" ? (
+                  <button
+                    type="button"
+                    className={styles.dangerButton}
+                    onClick={() => deleteSessionHandler(session.id)}
+                    disabled={isDeletingSession}
+                  >
+                    {isDeletingSession ? "Удаляем..." : "Удалить"}
+                  </button>
+                ) : null}
               </div>
 
               {isExpanded ? (
@@ -401,7 +422,10 @@ export function ProfilePage(): ReactNode {
                   {messages.length > 0 ? (
                     messages.map((message) => (
                       <div className={styles.messageItem} key={message.id}>
-                        <strong>{message.role === "user" ? "Вы" : "AI"}</strong>
+                        <strong>
+                          {message.metadata?.senderName ||
+                            (message.role === "user" ? "Вы" : "AI")}
+                        </strong>
                         <p>{getMessageText(message)}</p>
                       </div>
                     ))
