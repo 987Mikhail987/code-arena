@@ -30,6 +30,7 @@ export default function RoomPage() {
   const [status, setStatus] = useState<SessionStatusType>("active");
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [isWaitingForAi, setIsWaitingForAi] = useState(false);
   const [sessionError, setSessionError] = useState("");
   const [finishError, setFinishError] = useState("");
   const [editorCode, setEditorCode] = useState("// Ваш код");
@@ -207,38 +208,51 @@ export default function RoomPage() {
   }
 
   async function handleSendChatMessage(content: string) {
-    const response = await SessionApi.createMessage(params.id, {
-      content,
-      source: "chat",
-    });
+    setIsWaitingForAi(true);
+    setFinishError("");
 
-    if (response.statusCode !== 201 && response.statusCode !== 200) {
-      setFinishError(
-        response.error || response.message || "Не удалось отправить сообщение",
-      );
-      return;
+    try {
+      const response = await SessionApi.createMessage(params.id, {
+        content,
+        source: "chat",
+      });
+
+      if (response.statusCode !== 201 && response.statusCode !== 200) {
+        setFinishError(
+          response.error || response.message || "Не удалось отправить сообщение",
+        );
+        return;
+      }
+
+      handleProcessedMessage(response);
+    } finally {
+      setIsWaitingForAi(false);
     }
-
-    handleProcessedMessage(response);
   }
 
   async function handleSubmitCode(code: string) {
     updateEditorCode(code);
+    setIsWaitingForAi(true);
+    setFinishError("");
 
-    const response = await SessionApi.createMessage(params.id, {
-      content: "Проверь моё решение",
-      code,
-      source: "editor",
-    });
+    try {
+      const response = await SessionApi.createMessage(params.id, {
+        content: "Проверь моё решение",
+        code,
+        source: "editor",
+      });
 
-    if (response.statusCode !== 201 && response.statusCode !== 200) {
-      setFinishError(
-        response.error || response.message || "Не удалось отправить код",
-      );
-      return;
+      if (response.statusCode !== 201 && response.statusCode !== 200) {
+        setFinishError(
+          response.error || response.message || "Не удалось отправить код",
+        );
+        return;
+      }
+
+      handleProcessedMessage(response);
+    } finally {
+      setIsWaitingForAi(false);
     }
-
-    handleProcessedMessage(response);
   }
 
   return (
@@ -271,7 +285,17 @@ export default function RoomPage() {
         <LiveInterviewRoom
           session={session}
           disabled={isRoomDisabled}
+
           initialCode={editorCode || starterCode}
+
+          isTyping={isWaitingForAi}
+          onSendMessage={handleSendChatMessage}
+        />
+        <Redactor
+          code={editorCode}
+          disabled={isRoomDisabled}
+          
+
           language={editorLanguage}
           onCodeChange={updateEditorCode}
         />
