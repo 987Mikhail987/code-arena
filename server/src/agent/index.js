@@ -11,6 +11,26 @@ const { fallbackTool } = require("../tools/fallbackTool");
 
 dotenv.config({ path: join(__dirname, "../../.env") });
 
+
+
+const deepseek = new OpenRouter({
+  apiKey: process.env.DEEPSEEK_API_KEY,
+});
+
+
+async function invokeDeepseek(messages){
+const kekw = await deepseek.chat.send({
+  chatRequest: {
+    model: "deepseek/deepseek-v4-flash:free",
+    messages: messages.map((message) => ({
+      role: message.role === "ai" ? "assistant" : message.role,
+      content: message.content,
+    })),
+  },
+});
+return getAnswerContent(kekw);
+}
+
 const httpsAgent = new Agent({
   rejectUnauthorized: false,
 });
@@ -79,19 +99,28 @@ async function invokeAgent(llm, messages) {
 }
 
 async function getAnswer(messages) {
+
+  
   try {
-    const answer = await invokeAgent(agentModel, messages);
-    if (answer) {
-      return answer;
+    const answerGiga = await invokeAgent(agentModel, messages);
+    if (answerGiga) {
+      return answerGiga;
     }
   } catch (error) {
     console.log(error);
   }
-
+try {
+  const answer = await invokeDeepseek(messages);
+  if (answer) {
+    return answer;
+  }
+} catch (error) {
+  console.log(error);
+}
   try {
-    const answer = await invokeOpenRouter(messages);
-    if (answer) {
-      return answer;
+    const answerOpen = await invokeOpenRouter(messages);
+    if (answerOpen) {
+      return answerOpen;
     }
   } catch {
 
