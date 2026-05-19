@@ -28,11 +28,13 @@ const openrouter = new OpenRouter({
 
 async function invokeOpenRouter(messages) {
   const result = await openrouter.chat.send({
-    model: "openai/gpt-oss-120b:free",
-    messages: messages.map((message) => ({
-      role: message.role === "ai" ? "assistant" : message.role,
-      content: message.content,
-    })),
+    chatRequest: {
+      model: "openai/gpt-oss-120b:free",
+      messages: messages.map((message) => ({
+        role: message.role === "ai" ? "assistant" : message.role,
+        content: message.content,
+      })),
+    },
   });
 
   return result?.choices?.[0]?.message?.content?.trim() || "";
@@ -78,16 +80,16 @@ async function invokeAgent(llm, messages) {
 
 async function getAnswer(messages) {
   try {
-    const answer = await invokeOpenRouter(messages);
-
+    const answer = await invokeAgent(agentModel, messages);
     if (answer) {
       return answer;
     }
-  } catch {}
+  } catch (error) {
+    console.log(error);
+  }
 
   try {
-    const answer = await invokeAgent(agentModel, messages);
-
+    const answer = await invokeOpenRouter(messages);
     if (answer) {
       return answer;
     }

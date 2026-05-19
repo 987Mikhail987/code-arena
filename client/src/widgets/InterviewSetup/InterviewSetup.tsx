@@ -27,7 +27,71 @@ export function InterviewSetup({
     useState<ProgrammingLanguageType>("javascript");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
+const tema = [
+  "Алгоритмы",
+  "Структуры данных",
+  "ООП",
+  "SOLID",
+  "Паттерны проектирования",
+  "Чистый код",
+  "Принципы архитектуры",
+  "Асинхронность",
+  "Многопоточность",
+  "Работа с памятью",
+  "Сборка мусора",
+  "Компиляция и интерпретация",
+  "Типизация",
+  "Статическая и динамическая типизация",
+  "Функциональное программирование",
+  "Императивное программирование",
+  "Рекурсия",
+  "Оптимизация производительности",
+  "Сложность алгоритмов",
+  "Big O",
+  "Сортировки",
+  "Поиск",
+  "Хеш-таблицы",
+  "Деревья",
+  "Графы",
+  "Базы данных",
+  "SQL",
+  "Нормализация данных",
+  "Транзакции",
+  "Индексы",
+  "Кэширование",
+  "REST API",
+  "GraphQL",
+  "HTTP/HTTPS",
+  "TCP/IP",
+  "WebSocket",
+  "Авторизация и аутентификация",
+  "JWT",
+  "Безопасность приложений",
+  "Тестирование",
+  "Unit тесты",
+  "Интеграционные тесты",
+  "CI/CD",
+  "Docker",
+  "Linux",
+  "Git",
+  "Code Review",
+  "System Design",
+  "Микросервисы",
+  "Монолитная архитектура",
+  "Масштабирование систем",
+  "Event-driven архитектура",
+  "Очереди сообщений",
+  "Concurrency",
+  "Deadlock и race conditions",
+  "Dependency Injection",
+  "DDD",
+  "KISS",
+  "DRY",
+  "YAGNI",
+  "Реальное собеседование",
+  "Тренировочное интервью",
+  "Поведенческое интервью",
+  "Разбор задач с LeetCode"]
   const handleStart = async () => {
     setIsLoading(true);
     setError("");
@@ -36,7 +100,9 @@ export function InterviewSetup({
       const interview = await SessionApi.createSession({
         type: interviewType,
         level,
-        topic: topic.trim() ? topic.trim() : "Тренировочное интервью",
+        topic: topic.trim()
+          ? topic.trim()
+          : tema[Math.floor(Math.random() * tema.length)],
         programmingLanguage: language,
       });
 
