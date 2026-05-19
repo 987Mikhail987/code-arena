@@ -8,10 +8,12 @@ try {
 
 const { GigaChat } = require("gigachat");
 const { Agent } = require("node:https");
+const { getAnswer } = require("../agent");
 
 const AI_CONTEXT_LIMIT = 6000;
 const AI_CONTEXT_SOFT_LIMIT = 4800;
 const THEORY_QUESTIONS_BEFORE_FIRST_TASK = 2;
+const MAX_CLARIFICATIONS_BEFORE_NEXT_TASK = 2;
 
 class AiService {
   static get AI_CONTEXT_LIMIT() {
@@ -22,8 +24,12 @@ class AiService {
     return AI_CONTEXT_SOFT_LIMIT;
   }
 
+  static get MAX_CLARIFICATIONS_BEFORE_NEXT_TASK() {
+    return MAX_CLARIFICATIONS_BEFORE_NEXT_TASK;
+  }
+
   static getCredentials() {
-    return process.env.GIGACHAT_CREDENTIALS || process.env.GIGACHAT_API_KEY;
+    return process.env.GIGACHAT_API_KEY;
   }
 
   static getContextLength({ topic, message, messages, code }) {
@@ -55,15 +61,46 @@ class AiService {
               : 0;
 
           return (
-            total +
-            contentLength +
-            metadataCodeLength +
-            taskDescriptionLength
+            total + contentLength + metadataCodeLength + taskDescriptionLength
           );
         }, 0)
       : 0;
 
     return topicLength + messageLength + codeLength + messagesLength;
+  }
+
+  static getClarificationCount(messages = []) {
+    if (!Array.isArray(messages)) {
+      return 0;
+    }
+
+    let clarificationCount = 0;
+
+    for (let index = messages.length - 1; index >= 0; index -= 1) {
+      const message = messages[index];
+
+      if (!message || typeof message !== "object") {
+        continue;
+      }
+
+      const isAssistantMessage =
+        message.role === "assistant" || message.role === "ai";
+
+      const hasInterviewItem =
+        message.metadata?.itemType ||
+        message.metadata?.task ||
+        message.metadata?.review;
+
+      if (isAssistantMessage && hasInterviewItem) {
+        break;
+      }
+
+      if (isAssistantMessage && message.metadata?.needsClarification) {
+        clarificationCount += 1;
+      }
+    }
+
+    return clarificationCount;
   }
 
   static getInterviewItemStats(messages = []) {
@@ -88,7 +125,10 @@ class AiService {
           return stats;
         }
 
-        if (message.metadata?.itemType === "practice" || message.metadata?.task) {
+        if (
+          message.metadata?.itemType === "practice" ||
+          message.metadata?.task
+        ) {
           stats.practiceCount += 1;
         }
 
@@ -141,9 +181,7 @@ class AiService {
       "Ты технический интервьюер для учебного приложения CodeArena.",
       `Уровень: ${difficulty}.`,
       `Язык: ${programmingLanguage}.`,
-      normalizedTopic
-        ? `Тема: ${normalizedTopic}.`
-        : "Тема не указана.",
+      normalizedTopic ? `Тема: ${normalizedTopic}.` : "Тема не указана.",
       "Первые шаги интервью должны быть теоретическими вопросами без задачи в редакторе.",
       `До первой практической задачи задай ${THEORY_QUESTIONS_BEFORE_FIRST_TASK} теоретических вопроса.`,
       "После теоретического блока выдай практическую задачу, связанную с обсужденными вопросами.",
@@ -222,9 +260,10 @@ class AiService {
     programmingLanguage,
     topic,
     messages,
+    changeTopic = false,
   }) {
     const normalizedTopic = topic?.trim();
-    const history = this.normalizeMessages(messages).slice(-10);
+    const history = this.normalizeMessages(messages).slice(-6);
 
     return [
       {
@@ -233,19 +272,52 @@ class AiService {
           "Ты технический интервьюер CodeArena.",
           `Уровень: ${difficulty}.`,
           `Язык: ${programmingLanguage}.`,
-          normalizedTopic ? `Тема: ${normalizedTopic}.` : "Тема не указана.",
-          "Сгенерируй практическую задачу на основе предыдущих теоретических вопросов и ответов пользователя.",
+
+          normalizedTopic && !changeTopic
+            ? `Тема: ${normalizedTopic}.`
+            : "Выбери новую тему самостоятельно.",
+
+          changeTopic
+            ? "Пользователь НЕ справился с предыдущей задачей."
+            : "Продолжи интервью.",
+
+          changeTopic ? "НУЖНО полностью сменить тему." : "",
+
+          changeTopic
+            ? "Категорически запрещено повторять предыдущую задачу."
+            : "",
+
+          changeTopic
+            ? "Категорически запрещено просить пользователя продолжить прошлую задачу."
+            : "",
+
+          changeTopic
+            ? "Категорически запрещено упоминать прошлую задачу."
+            : "",
+
+          changeTopic ? "Новая задача должна быть проще предыдущей." : "",
+
           "Задача должна быть похожа на реальное техническое собеседование.",
+
           "Не давай готовое решение.",
+
+          "Не проси пользователя предоставить попытку решения старой задачи.",
+
           "Верни только валидный JSON без markdown.",
+
           'Формат: {"chatMessage":"string","task":{"description":"string","starterCode":"string","editorLanguage":"string"},"review":null}.',
-        ].join(" "),
+        ]
+          .filter(Boolean)
+          .join(" "),
       },
+
       ...history,
+
       {
         role: "user",
-        content:
-          "Теперь перейди от теории к практической задаче. Поле task обязательно должно быть заполнено.",
+        content: changeTopic
+          ? "Предыдущая задача провалена. Сгенерируй НОВУЮ задачу на ДРУГУЮ тему."
+          : "Выдай следующую практическую задачу.",
       },
     ];
   }
@@ -322,39 +394,24 @@ class AiService {
   }
 
   static async requestChat(client, messages) {
-    let response;
-
     try {
-      response = await client.chat({ messages });
+      const answer = await getAnswer(messages);
+
+      if (!answer) {
+        throw new Error("AI не вернул текстовый ответ");
+      }
+
+      return String(answer).trim();
     } catch (error) {
       const providerError = error?.response?.data || error?.message || error;
-
-      if (
-        providerError &&
-        typeof providerError === "object" &&
-        providerError.message === "credentials doesn't match db data"
-      ) {
-        throw new Error(
-          "Неверный ключ авторизации GigaChat. Проверьте GIGACHAT_CREDENTIALS/GIGACHAT_API_KEY в .env: для gigachat нужен credentials-ключ, выданный в кабинете GigaChat.",
-          { cause: error },
-        );
-      }
 
       throw new Error(
         typeof providerError === "string"
           ? providerError
-          : providerError?.message || "Ошибка запроса к GigaChat",
+          : providerError?.message || "Ошибка запроса к AI",
         { cause: error },
       );
     }
-
-    const answer = response.choices[0]?.message?.content?.trim();
-
-    if (!answer) {
-      throw new Error("GigaChat не вернул текстовый ответ");
-    }
-
-    return answer;
   }
 
   static parseClarificationResponse(answer) {
@@ -377,8 +434,15 @@ class AiService {
   }
 
   static async getClarificationDecision(client, payload) {
-    const { difficulty, programmingLanguage, topic, message, messages, code } =
-      payload;
+    const {
+      difficulty,
+      programmingLanguage,
+      topic,
+      message,
+      messages,
+      code,
+      clarificationCount = 0,
+    } = payload;
 
     const history = this.normalizeMessages(messages);
     const normalizedMessage = typeof message === "string" ? message.trim() : "";
@@ -387,12 +451,59 @@ class AiService {
       {
         role: "system",
         content: [
-          "Ты помощник технического интервьюера.",
-          "Определи, достаточно ли данных для основного ответа пользователю.",
-          'Если данных достаточно, ответь строго JSON: {"needsClarification": false}.',
-          'Если нужны уточнения, ответь строго JSON: {"needsClarification": true, "clarificationQuestion": "..."}.',
-          "Если в истории уже есть теоретический вопрос, задача, решение пользователя или код, обычно данных достаточно.",
-          "Не добавляй пояснений вне JSON.",
+          "Ты помощник технического интервьюера CodeArena.",
+
+          "Твоя задача — определить, хватает ли данных для продолжения интервью, проверки ответа пользователя или перехода к следующему этапу.",
+
+          "Учитывай clarificationCount — сколько уточнений уже было задано по текущему заданию.",
+
+          "Анализируй историю сообщений, код пользователя, предыдущие задачи и ответы.",
+
+          "Если пользователь дал полностью неправильный ответ, не понимает решение, отвечает не по теме, прислал случайный текст, пустой ответ, или несколько раз подряд не может продвинуться по задаче — НЕ задавай уточняющие вопросы.",
+
+          "Вместо этого нужно завершить текущую задачу и перейти к новой теме или новой задаче.",
+
+          "Если пользователь явно застрял, ошибается концептуально или не может решить задачу после нескольких попыток — считай, что текущая задача провалена.",
+
+          "Если clarificationCount >= 2 — больше НЕ задавай уточнений.",
+
+          "Если пользователь не справился или clarificationCount >= 1, ответь строго JSON:",
+          '{"needsClarification": false, "forceNextTask": true, "changeTopic": true}.',
+
+          "Если данных достаточно для обычного продолжения интервью, проверки решения или генерации следующего вопроса — ответь строго JSON:",
+          '{"needsClarification": false}.',
+
+          "Если действительно нужны уточнения И clarificationCount < 2 И пользователь в целом движется в правильном направлении — ответь строго JSON:",
+          '{"needsClarification": true, "clarificationQuestion": "..."}.',
+
+          "Уточняющий вопрос должен:",
+          "- быть коротким;",
+          "- помогать пользователю двигаться дальше;",
+          "- НЕ раскрывать решение;",
+          "- НЕ содержать готовый код;",
+          "- НЕ содержать полный алгоритм.",
+
+          "Если в истории уже есть:",
+          "- код пользователя;",
+          "- решение;",
+          "- теоретический ответ;",
+          "- описание задачи;",
+          "- попытка решения;",
+          "то обычно данных уже достаточно и уточнения НЕ нужны.",
+
+          "Никогда не пиши пояснения вне JSON.",
+
+          "Никогда не используй markdown.",
+
+          "Никогда не добавляй текст до или после JSON.",
+
+          "Допустимы только 3 формата ответа:",
+
+          '{"needsClarification": false}',
+
+          '{"needsClarification": true, "clarificationQuestion": "..."}',
+
+          '{"needsClarification": false, "forceNextTask": true, "changeTopic": true}',
         ].join(" "),
       },
       {
@@ -404,28 +515,13 @@ class AiService {
           message: normalizedMessage || null,
           messages: history,
           code: typeof code === "string" && code.trim() ? code.trim() : null,
+          clarificationCount,
         }),
       },
     ]);
 
     return this.parseClarificationResponse(answer);
   }
-
-  // static extractJson(text) {
-  //   const normalized = text.trim();
-
-  //   try {
-  //     return JSON.parse(normalized);
-  //   } catch {
-  //     const match = normalized.match(/\{[\s\S]*\}/);
-
-  //     if (!match) {
-  //       throw new Error("AI не вернул JSON");
-  //     }
-
-  //     return JSON.parse(match[0]);
-  //   }
-  // }
 
   static extractJson(text) {
     const source = String(text || "").trim();
@@ -600,37 +696,6 @@ class AiService {
     return cleaned;
   }
 
-  // static parseAiResponse(answer, programmingLanguage) {
-  //   try {
-  //     const parsed = this.extractJson(answer);
-
-  //     const chatMessage = String(
-  //       parsed.chatMessage || parsed.answer || "",
-  //     ).trim();
-
-  //     return {
-  //       answer: chatMessage || answer.trim(),
-  //       metadata: {
-  //         task: parsed.task
-  //           ? {
-  //               description: String(parsed.task.description || "").trim(),
-  //               starterCode: String(parsed.task.starterCode || "").trim(),
-  //               editorLanguage: String(
-  //                 parsed.task.editorLanguage || programmingLanguage,
-  //               ).trim(),
-  //             }
-  //           : null,
-  //         review: parsed.review || null,
-  //       },
-  //     };
-  //   } catch {
-  //     return {
-  //       answer: answer.trim(),
-  //       metadata: null,
-  //     };
-  //   }
-  // }
-
   static parseAiResponse(answer, programmingLanguage) {
     try {
       const parsed = this.extractJson(answer);
@@ -657,18 +722,25 @@ class AiService {
     message,
     messages,
     code,
+    clarificationCount = null,
   }) {
     const client = this.createClient();
     const normalizedMessages = this.normalizeMessages(messages);
     const normalizedMessage = typeof message === "string" ? message.trim() : "";
     const isFirstRequest =
       normalizedMessages.length === 0 && normalizedMessage.length === 0;
+
     const preferredNextItemType = this.getPreferredNextItemType(
       messages,
       isFirstRequest,
     );
 
     if (!isFirstRequest) {
+      const currentClarificationCount =
+        typeof clarificationCount === "number"
+          ? clarificationCount
+          : this.getClarificationCount(messages);
+
       const clarificationDecision = await this.getClarificationDecision(
         client,
         {
@@ -678,8 +750,54 @@ class AiService {
           message,
           messages,
           code,
+          clarificationCount: currentClarificationCount,
         },
       );
+
+      if (
+        clarificationDecision?.forceNextTask ||
+        (clarificationDecision?.needsClarification &&
+          currentClarificationCount >= MAX_CLARIFICATIONS_BEFORE_NEXT_TASK)
+      ) {
+        const practiceAnswer = await this.requestChat(
+          client,
+          this.buildForcedPracticeMessages({
+            difficulty,
+            programmingLanguage,
+            topic,
+            messages,
+          }),
+        );
+
+        const practiceData = this.parseAiResponse(
+          practiceAnswer,
+          programmingLanguage,
+        );
+
+        const fallbackPracticeData = practiceData.metadata?.task
+          ? practiceData
+          : {
+              ...practiceData,
+              metadata: {
+                ...(practiceData.metadata || {}),
+                task: {
+                  description: practiceData.answer,
+                  starterCode: "// Напишите решение здесь",
+                  editorLanguage: programmingLanguage,
+                },
+              },
+            };
+
+        return this.withInterviewItemType(
+          {
+            ...fallbackPracticeData,
+            answer:
+              "Не удалось выполнить данное задание. Переходим к следующему.\n\n" +
+              fallbackPracticeData.answer,
+          },
+          "practice",
+        );
+      }
 
       if (
         clarificationDecision?.needsClarification &&
@@ -687,6 +805,9 @@ class AiService {
       ) {
         return {
           answer: clarificationDecision.clarificationQuestion,
+          metadata: {
+            needsClarification: true,
+          },
         };
       }
     }
@@ -743,7 +864,11 @@ class AiService {
           messages,
         }),
       );
-      const theoryData = this.parseAiResponse(theoryAnswer, programmingLanguage);
+
+      const theoryData = this.parseAiResponse(
+        theoryAnswer,
+        programmingLanguage,
+      );
 
       return this.withInterviewItemType(
         {
@@ -767,6 +892,7 @@ class AiService {
           messages,
         }),
       );
+
       const practiceData = this.parseAiResponse(
         practiceAnswer,
         programmingLanguage,
@@ -865,10 +991,12 @@ class AiService {
     const codeLimit = Math.floor(
       Math.min(1600, Math.max(0, AI_CONTEXT_SOFT_LIMIT / 2)),
     );
+
     const shortenedCode =
       normalizedCode.length > codeLimit
         ? normalizedCode.slice(-codeLimit)
         : normalizedCode;
+
     const shortenedPayload = buildPayload(
       shortenedMessages,
       shortenedCode,
@@ -898,7 +1026,7 @@ class AiService {
           "Не добавляй приветствие, JSON, markdown и служебные пояснения.",
           "Не предлагай новую задачу и не решай задачи за пользователя.",
           "Отвечай только на русском языке.",
-          "Структура ответа строго: 1. Итог. 2. Что получилось хорошо. 3. Что улучшить.",
+          "Структура ответа строго: 1. Итог. 2. Что получилось хорошо. 3. Что улучшить. Какие темы следует повторить",
         ].join(" "),
       },
       {
