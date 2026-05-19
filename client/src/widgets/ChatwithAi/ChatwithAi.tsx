@@ -1,8 +1,42 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./ChatwithAi.module.css";
 import type { MessageType } from "@/entities/session/model/types";
+
+type SpeechRecognitionAlternative = {
+  transcript: string;
+};
+
+type SpeechRecognitionResult = {
+  isFinal: boolean;
+  0: SpeechRecognitionAlternative;
+};
+
+type SpeechRecognitionEvent = {
+  resultIndex: number;
+  results: ArrayLike<SpeechRecognitionResult>;
+};
+
+type BrowserSpeechRecognition = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+type SpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  }
+}
 
 export type ChatProps = {
   messages?: MessageType[];
@@ -42,8 +76,22 @@ export default function Chat({
   disabled = false,
 }: ChatProps) {
   const [inputValue, setInputValue] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [voiceError, setVoiceError] = useState("");
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const baseInputRef = useRef("");
+
+  const speechRecognitionCtor = useMemo(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  }, []);
+
+  const isVoiceSupported = Boolean(speechRecognitionCtor);
 
   useEffect(() => {
     const container = messagesContainerRef.current;
@@ -69,6 +117,12 @@ export default function Chat({
     textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
   }, [inputValue]);
 
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop();
+    };
+  }, []);
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -80,6 +134,7 @@ export default function Chat({
 
     onSendMessage?.(trimmedValue);
     setInputValue("");
+    setVoiceError("");
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -87,6 +142,58 @@ export default function Chat({
       event.preventDefault();
       handleSubmit(event);
     }
+  };
+
+  const handleToggleVoiceInput = () => {
+    if (disabled || !speechRecognitionCtor) {
+      return;
+    }
+
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      return;
+    }
+
+    const recognition = new speechRecognitionCtor();
+    const initialValue = inputValue.trim();
+
+    baseInputRef.current = initialValue;
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "ru-RU";
+
+    recognition.onresult = (event) => {
+      let transcript = "";
+
+      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        transcript += event.results[index][0]?.transcript || "";
+      }
+
+      const normalizedTranscript = transcript.trim();
+
+      setInputValue(
+        normalizedTranscript
+          ? [baseInputRef.current, normalizedTranscript].filter(Boolean).join(" ")
+          : baseInputRef.current,
+      );
+      setVoiceError("");
+    };
+
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setIsRecording(false);
+    };
+
+    recognition.onerror = () => {
+      recognitionRef.current = null;
+      setIsRecording(false);
+      setVoiceError("Не удалось распознать голосовой ввод.");
+    };
+
+    recognitionRef.current = recognition;
+    setVoiceError("");
+    setIsRecording(true);
+    recognition.start();
   };
 
   return (
@@ -116,6 +223,8 @@ export default function Chat({
         )}
       </div>
 
+      {voiceError ? <p className={styles.voiceError}>{voiceError}</p> : null}
+
       <form className={styles.form} onSubmit={handleSubmit}>
         <textarea
           ref={inputRef}
@@ -126,6 +235,22 @@ export default function Chat({
           placeholder={disabled ? "Интервью завершено" : placeholder}
           disabled={disabled}
         />
+        <button
+          type="button"
+          className={styles.voiceButton}
+          onClick={handleToggleVoiceInput}
+          disabled={disabled || !isVoiceSupported}
+          aria-pressed={isRecording}
+          title={
+            isVoiceSupported
+              ? isRecording
+                ? "Остановить запись"
+                : "Начать голосовой ввод"
+              : "Голосовой ввод недоступен в этом браузере"
+          }
+        >
+          {isRecording ? "Стоп" : "Голос"}
+        </button>
         <button type="submit" disabled={disabled || !inputValue.trim()}>
           Отправить
         </button>

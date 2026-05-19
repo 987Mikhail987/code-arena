@@ -135,9 +135,27 @@
   font-weight: 700;
 }
 
+.voiceButton {
+  min-width: 88px;
+  background:
+    color-mix(in srgb, var(--surface) 80%, var(--accent) 20%);
+  color: var(--foreground);
+}
+
+.voiceButton[aria-pressed="true"] {
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+  color: #fff7f4;
+}
+
 .form button:disabled {
   background-color: var(--surface-muted);
   color: var(--foreground-muted);
+}
+
+.voiceError {
+  margin: -4px 0 0;
+  color: #ff9e8a;
+  font-size: 0.92rem;
 }
 
 @media (max-width: 560px) {
