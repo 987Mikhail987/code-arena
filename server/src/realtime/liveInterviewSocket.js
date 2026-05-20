@@ -66,6 +66,17 @@ function normalizeUpdate(update) {
   return update instanceof Uint8Array ? update : Uint8Array.from(update || []);
 }
 
+async function emitParticipantPresence(io, publicId) {
+  const roomName = `live:${publicId}`;
+  const sockets = await io.in(roomName).fetchSockets();
+  const connectedRoles = sockets.map((currentSocket) => currentSocket.data.user?.role);
+
+  io.to(roomName).emit("live:participants", {
+    candidateConnected: connectedRoles.includes("candidate"),
+    interviewerConnected: connectedRoles.includes("intervier"),
+  });
+}
+
 function initLiveInterviewSocket(server) {
   const io = new Server(server, {
     cors: corsConfig,
@@ -96,6 +107,16 @@ function initLiveInterviewSocket(server) {
           return;
         }
 
+        const joinResult = await SessionService.joinLiveSession(
+          session,
+          socket.data.user,
+        );
+
+        if (!joinResult.ok) {
+          socket.emit("live:error", joinResult.error);
+          return;
+        }
+
         socket.join(`live:${session.public_id}`);
         socket.data.liveRoomId = session.public_id;
         socket.data.liveSessionId = session.id;
@@ -103,6 +124,7 @@ function initLiveInterviewSocket(server) {
           roomId: session.public_id,
           sessionId: session.id,
         });
+        await emitParticipantPresence(io, session.public_id);
       } catch {
         socket.emit("live:error", "Не удалось подключиться к live-интервью");
       }
@@ -185,6 +207,14 @@ function initLiveInterviewSocket(server) {
       } catch {
         socket.emit("live:error", "Не удалось обновить код");
       }
+    });
+
+    socket.on("disconnect", async () => {
+      if (!socket.data.liveRoomId) {
+        return;
+      }
+
+      await emitParticipantPresence(io, socket.data.liveRoomId);
     });
   });
 

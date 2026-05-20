@@ -21,6 +21,11 @@ type LiveInterviewRoomProps = {
   onCodeChange?: (code: string) => void;
 };
 
+type LiveParticipantPresence = {
+  candidateConnected: boolean;
+  interviewerConnected: boolean;
+};
+
 function appendMessage(messages: MessageType[], message: MessageType) {
   if (messages.some((currentMessage) => currentMessage.id === message.id)) {
     return messages;
@@ -45,6 +50,10 @@ export function LiveInterviewRoom({
   );
   const [connectionError, setConnectionError] = useState("");
   const [isConnected, setIsConnected] = useState(false);
+  const [presence, setPresence] = useState<LiveParticipantPresence>({
+    candidateConnected: currentUser?.role === "candidate",
+    interviewerConnected: currentUser?.role === "intervier",
+  });
 
   useEffect(() => {
     function handleConnect() {
@@ -68,11 +77,16 @@ export function LiveInterviewRoom({
       setMessages((prevMessages) => appendMessage(prevMessages, message));
     }
 
+    function handleParticipants(nextPresence: LiveParticipantPresence) {
+      setPresence(nextPresence);
+    }
+
     socket.on("connect", handleConnect);
     socket.on("live:joined", handleJoined);
     socket.on("disconnect", handleDisconnect);
     socket.on("live:error", handleError);
     socket.on("live:chat:new", handleNewMessage);
+    socket.on("live:participants", handleParticipants);
     socket.connect();
 
     return () => {
@@ -81,6 +95,7 @@ export function LiveInterviewRoom({
       socket.off("disconnect", handleDisconnect);
       socket.off("live:error", handleError);
       socket.off("live:chat:new", handleNewMessage);
+      socket.off("live:participants", handleParticipants);
       socket.disconnect();
     };
   }, [roomId, socket]);
@@ -90,8 +105,19 @@ export function LiveInterviewRoom({
       return connectionError;
     }
 
-    return isConnected ? "Участники подключены к live-комнате" : "Подключаем live-комнату...";
-  }, [connectionError, isConnected]);
+    if (!isConnected) {
+      return "Подключаем live-комнату...";
+    }
+
+    const candidateStatus = presence.candidateConnected
+      ? "кандидат подключён"
+      : "кандидат не подключён";
+    const interviewerStatus = presence.interviewerConnected
+      ? "интервьюер подключён"
+      : "интервьюер не подключён";
+
+    return `${candidateStatus}, ${interviewerStatus}`;
+  }, [connectionError, isConnected, presence]);
 
   function handleSendMessage(content: string) {
     socketRef.current?.emit("live:chat:send", {

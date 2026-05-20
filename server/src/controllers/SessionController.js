@@ -89,6 +89,12 @@ class SessionController {
     const { content, level, type = "ai", programmingLanguage } = req.body || {};
     const topic = req.body?.topic ?? content;
 
+    if (user.role !== "candidate") {
+      return res
+        .status(403)
+        .json(formatResponse(403, "Создавать интервью может только кандидат"));
+    }
+
     if (!topic || typeof topic !== "string" || topic.trim().length === 0) {
       return res
         .status(400)
@@ -146,6 +152,10 @@ class SessionController {
         programming_language: programmingLanguage,
         public_id: type === "live" ? generatePublicId() : null,
       });
+
+      if (type === "live") {
+        await SessionService.createParticipant(session.id, user);
+      }
 
       let firstMessage = null;
 
@@ -215,6 +225,32 @@ class SessionController {
     }
   }
 
+  static async getActiveLiveSessions(req, res) {
+    const { user } = res.locals;
+
+    if (user.role !== "intervier") {
+      return res
+        .status(403)
+        .json(formatResponse(403, "Список доступен только интервьюеру"));
+    }
+
+    try {
+      const sessions = await SessionService.getActiveLiveSessionsForInterviewer(
+        user.id,
+      );
+
+      return res
+        .status(200)
+        .json(formatResponse(200, "Активные live-интервью получены", sessions));
+    } catch (error) {
+      console.log("======== SessionController.getActiveLiveSessions =========");
+      console.log(error);
+      return res
+        .status(500)
+        .json(formatResponse(500, "Ошибка при получении live-интервью"));
+    }
+  }
+
   static async getUserSessionById(req, res) {
     const { user } = res.locals;
     const { sessionId } = req.params;
@@ -247,7 +283,7 @@ class SessionController {
     const { user } = res.locals;
 
     try {
-      const deletedCount = await SessionService.deleteUserSessions(user.id);
+      const deletedCount = await SessionService.deleteUserSessions(user);
 
       return res.status(200).json(
         formatResponse(200, "История тренировочных сессий очищена", {
@@ -276,7 +312,7 @@ class SessionController {
     try {
       const deletedCount = await SessionService.deleteUserSession(
         sessionId,
-        user.id,
+        user,
       );
 
       if (deletedCount === 0) {
