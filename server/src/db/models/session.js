@@ -24,6 +24,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "session_id",
         as: "messages",
       });
+      this.hasMany(models.SessionParticipant, {
+        foreignKey: "session_id",
+        as: "participants",
+      });
     }
   }
 

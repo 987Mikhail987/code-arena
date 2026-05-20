@@ -67,6 +67,19 @@ export type SessionType = {
     email: string;
     role: string;
   };
+  participants?: {
+    id: number;
+    session_id: number;
+    user_id: number;
+    role: "candidate" | "intervier";
+    deleted_at?: string | null;
+    user?: {
+      id: number;
+      name: string;
+      email: string;
+      role: string;
+    };
+  }[];
   messages?: MessageType[];
   result?: SessionResultType;
   createdAt: string;

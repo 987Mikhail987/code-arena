@@ -3,14 +3,17 @@ import UserGuard from "@/shared/hocs/UserGuard/UserGuard";
 import ChooseInterview from "@/widgets/ChooseInterview/ui/ChooseInterview";
 import { InterviewSetup } from "@/widgets/InterviewSetup/InterviewSetup";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import type {InterviewType} from "@/entities/session/model/types";
+import { useAppSelector } from "../store/hooks";
+import { selectUser } from "@/entities/user/model/selectors";
 
 type StepType = "choice" | "configuring";
 
 export default function DashboardPage() {
   const router = useRouter();
+  const user = useAppSelector(selectUser);
   const [step, setStep] = useState<StepType>("choice");
   const [interviewType, setInterviewType] = useState<InterviewType | null>(
     null,
@@ -29,6 +32,12 @@ export default function DashboardPage() {
     setStep("choice");
     setInterviewType(null);
   };
+
+  useEffect(() => {
+    if (user?.role === "intervier") {
+      router.replace("/interviews");
+    }
+  }, [router, user?.role]);
 
   return (
     <UserGuard mode="authenticated" redirectTo="/auth">

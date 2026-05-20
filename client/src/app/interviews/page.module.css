@@ -1,0 +1,145 @@
+.interviewsPage {
+  display: grid;
+  gap: 24px;
+  padding: 28px 0 0;
+}
+
+.heading,
+.card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.heading {
+  padding: 30px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 42%),
+    color-mix(in srgb, var(--surface) 88%, transparent);
+}
+
+.heading p {
+  margin: 0 0 10px;
+  color: var(--accent);
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.heading h1 {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 52px);
+  line-height: 1;
+}
+
+.card {
+  padding: 28px;
+}
+
+.sessionsList {
+  display: grid;
+  gap: 16px;
+}
+
+.sessionCard {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--control-bg) 74%, transparent);
+}
+
+.sessionCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.sessionCardHeader h2,
+.sessionCardHeader p,
+.message,
+.error {
+  margin: 0;
+}
+
+.sessionCardHeader h2 {
+  font-size: 18px;
+  color: var(--foreground);
+}
+
+.sessionCardHeader p {
+  margin-top: 6px;
+  color: var(--foreground-muted);
+  font-size: 13px;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--accent-muted);
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.sessionMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sessionMeta span {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--foreground-muted);
+  font-size: 13px;
+}
+
+.primaryButton {
+  width: fit-content;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff7f4;
+  font-weight: 800;
+  transition: transform 0.2s ease;
+}
+
+.primaryButton:hover {
+  transform: translateY(-1px);
+}
+
+.message {
+  color: var(--foreground-muted);
+}
+
+.error {
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--danger) 36%, transparent);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+}
+
+@media (max-width: 640px) {
+  .card,
+  .heading {
+    padding: 22px;
+  }
+
+  .sessionCardHeader {
+    flex-direction: column;
+  }
+}

@@ -41,6 +41,18 @@ export default class SessionApi {
     }
   }
 
+  static async getActiveLiveSessions(): Promise<ApiResponse<SessionType[]>> {
+    try {
+      const response = await axiosInstance.get("/sessions/live/active");
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        return error.response.data;
+      }
+      throw error;
+    }
+  }
+
   static async getSessionById(
     sessionId: string,
   ): Promise<ApiResponse<SessionType>> {
