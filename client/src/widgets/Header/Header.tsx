@@ -23,7 +23,7 @@ export default function Header({ onToggleTheme }: HeaderProps) {
 
   async function handleInterviewClick() {
     if (user?.role === "intervier") {
-      router.push("/profile");
+      router.push("/interviews");
       return;
     }
 
@@ -36,7 +36,9 @@ export default function Header({ onToggleTheme }: HeaderProps) {
       );
 
       if (response.statusCode === 200 && activeSession) {
-        router.push(`/room/${activeSession.id}`);
+        router.push(
+          `/room/${activeSession.public_id || activeSession.publicId || activeSession.id}`,
+        );
         return;
       }
 

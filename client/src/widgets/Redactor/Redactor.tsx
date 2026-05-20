@@ -1,7 +1,7 @@
 "use client";
 
 import { Editor } from "@monaco-editor/react";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import styles from "./Redactor.module.css";
 
 export type MonacoLanguage =

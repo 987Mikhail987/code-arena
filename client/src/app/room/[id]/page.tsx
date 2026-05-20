@@ -280,6 +280,10 @@ export default function RoomPage() {
 
       {sessionError ? <p className={styles.error}>{sessionError}</p> : null}
       {finishError ? <p className={styles.error}>{finishError}</p> : null}
+      <p className={styles.interviewHint}>
+        Если тему не знаешь, рекомендуем завершить интервью, изучить её и
+        начать новое интервью.
+      </p>
 
       {session && isLiveSession ? (
         <LiveInterviewRoom

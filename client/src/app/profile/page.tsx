@@ -236,11 +236,19 @@ export function ProfilePage(): ReactNode {
       setSessions((prev) => prev.filter((session) => session.id !== sessionId));
       setSessionDetailsById((prev) => {
         const next = { ...prev };
-        delete next[sessionId];
+        const deletedSession = sessions.find((session) => session.id === sessionId);
+        const sessionKey =
+          deletedSession?.public_id || deletedSession?.publicId || sessionId;
+
+        delete next[sessionKey];
         return next;
       });
 
-      if (expandedSessionId === sessionId) {
+      const deletedSession = sessions.find((session) => session.id === sessionId);
+      const sessionKey =
+        deletedSession?.public_id || deletedSession?.publicId || sessionId;
+
+      if (expandedSessionId === sessionKey) {
         setExpandedSessionId(null);
       }
     } else {
@@ -314,26 +322,20 @@ export function ProfilePage(): ReactNode {
       <div className={styles.sectionHeader}>
         <div>
           <h2 className={styles.cardTitle}>
-            {user.role === "intervier"
-              ? "Активные live-интервью кандидатов"
-              : "История собеседований"}
+            История собеседований
           </h2>
           <p className={styles.sectionSubtitle}>
-            {user.role === "intervier"
-              ? "Открытые комнаты, к которым можно подключиться для интервью."
-              : "Прошлые сессии и сообщения внутри выбранного интервью."}
+            Прошлые сессии и сообщения внутри выбранного интервью.
           </p>
         </div>
-        {user.role === "candidate" ? (
-          <button
-            type="button"
-            className={styles.dangerButton}
-            onClick={clearHistoryHandler}
-            disabled={isLoadingSessions || sessions.length === 0 || isClearingHistory}
-          >
-            {isClearingHistory ? "Очищаем..." : "Очистить историю"}
-          </button>
-        ) : null}
+        <button
+          type="button"
+          className={styles.dangerButton}
+          onClick={clearHistoryHandler}
+          disabled={isLoadingSessions || sessions.length === 0 || isClearingHistory}
+        >
+          {isClearingHistory ? "Очищаем..." : "Очистить историю"}
+        </button>
       </div>
 
       {isLoadingSessions ? (
@@ -343,11 +345,7 @@ export function ProfilePage(): ReactNode {
         <p className={styles.formError}>{sessionsMessage}</p>
       ) : null}
       {!isLoadingSessions && sessions.length === 0 ? (
-        <p className={styles.message}>
-          {user.role === "intervier"
-            ? "Активных live-интервью пока нет."
-            : "История пока пустая."}
-        </p>
+        <p className={styles.message}>История пока пустая.</p>
       ) : null}
 
       <div className={styles.sessionsList}>
@@ -405,16 +403,14 @@ export function ProfilePage(): ReactNode {
                 >
                   Открыть интервью
                 </button>
-                {user.role === "candidate" ? (
-                  <button
-                    type="button"
-                    className={styles.dangerButton}
-                    onClick={() => deleteSessionHandler(session.id)}
-                    disabled={isDeletingSession}
-                  >
-                    {isDeletingSession ? "Удаляем..." : "Удалить"}
-                  </button>
-                ) : null}
+                <button
+                  type="button"
+                  className={styles.dangerButton}
+                  onClick={() => deleteSessionHandler(session.id)}
+                  disabled={isDeletingSession}
+                >
+                  {isDeletingSession ? "Удаляем..." : "Удалить"}
+                </button>
               </div>
 
               {isExpanded ? (
