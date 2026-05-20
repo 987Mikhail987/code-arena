@@ -12,16 +12,6 @@ class SessionService {
         user_id: userId,
         status: "active",
       },
-<<<<<<< HEAD
-=======
-      order: [["createdAt", "DESC"]],
-    });
-  }
-
-  static async getUserSessions(userId) {
-    return Session.findAll({
-      where: { user_id: userId },
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
       order: [["createdAt", "DESC"]],
     });
   }

@@ -9,23 +9,12 @@ class AiController {
     const allowedDifficulties = ["junior", "middle", "senior"];
 
     if (!allowedDifficulties.includes(difficulty)) {
-<<<<<<< HEAD
       return res.status(400).json(
         formatResponse(
           400,
           "Поле difficulty должно быть одним из значений: junior, middle, senior",
         ),
       );
-=======
-      return res
-        .status(400)
-        .json(
-          formatResponse(
-            400,
-            "Поле difficulty должно быть одним из значений: junior, middle, senior",
-          ),
-        );
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
     }
 
     if (

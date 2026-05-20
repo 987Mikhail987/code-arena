@@ -2,21 +2,14 @@
 
 import SessionApi from "@/entities/session/api/sessionApi";
 import type {
-<<<<<<< HEAD
   MessageType,
-=======
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   SessionStatusType,
   SessionType,
 } from "@/entities/session/model/types";
 import Chat from "@/widgets/ChatwithAi/ChatwithAi";
 import { LiveInterviewRoom } from "@/widgets/LiveInterviewRoom/LiveInterviewRoom";
 import Redactor from "@/widgets/Redactor/Redactor";
-<<<<<<< HEAD
 import { useParams, useRouter } from "next/navigation";
-=======
-import { useParams } from "next/navigation";
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
 import React, { useEffect, useMemo, useState } from "react";
 import styles from "./page.module.css";
 
@@ -28,22 +21,16 @@ function getLatestTaskMessage(messages?: MessageType[]) {
 
 export default function RoomPage() {
   const params = useParams<{ id: string }>();
-<<<<<<< HEAD
   const router = useRouter();
   const editorStorageKey = useMemo(
     () => `code-arena:session:${params.id}:editor-code`,
     [params.id],
   );
-=======
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   const [session, setSession] = useState<SessionType | null>(null);
   const [status, setStatus] = useState<SessionStatusType>("active");
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [isFinishing, setIsFinishing] = useState(false);
-<<<<<<< HEAD
   const [isWaitingForAi, setIsWaitingForAi] = useState(false);
-=======
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   const [sessionError, setSessionError] = useState("");
   const [finishError, setFinishError] = useState("");
   const [editorCode, setEditorCode] = useState("// Ваш код");
@@ -51,7 +38,6 @@ export default function RoomPage() {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const isComplited = status === "complited";
-<<<<<<< HEAD
   const isLiveSession = session?.type === "live";
   const isRoomDisabled =
     isLoadingSession || Boolean(sessionError) || isFinishing || isComplited;
@@ -64,11 +50,6 @@ export default function RoomPage() {
     }
   }
 
-=======
-  const isRoomDisabled =
-    isLoadingSession || Boolean(sessionError) || isFinishing || isComplited;
-
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   useEffect(() => {
     let isMounted = true;
 
@@ -85,15 +66,12 @@ export default function RoomPage() {
         }
 
         if (response.statusCode === 200) {
-<<<<<<< HEAD
           const savedEditorCode =
             typeof window !== "undefined"
               ? window.localStorage.getItem(editorStorageKey)
               : "";
           const latestTask = getLatestTaskMessage(response.data.messages);
 
-=======
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
           setSession(response.data);
           setStatus(response.data.status);
 
@@ -103,13 +81,10 @@ export default function RoomPage() {
 
           if (response.data.result?.code) {
             setEditorCode(response.data.result.code);
-<<<<<<< HEAD
           } else if (savedEditorCode) {
             setEditorCode(savedEditorCode);
           } else if (latestTask?.metadata?.task?.starterCode) {
             setEditorCode(latestTask.metadata.task.starterCode);
-=======
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
           }
 
           return;
@@ -134,19 +109,10 @@ export default function RoomPage() {
     return () => {
       isMounted = false;
     };
-<<<<<<< HEAD
   }, [editorStorageKey, params.id]);
 
   const taskMessage = useMemo(() => {
     return getLatestTaskMessage(session?.messages);
-=======
-  }, [params.id]);
-
-  const taskMessage = useMemo(() => {
-    return session?.messages
-      ?.filter((message) => message.role === "assistant" || message.role === "ai")
-      .findLast((message) => message.metadata?.task);
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   }, [session]);
 
   const starterCode =
@@ -171,7 +137,6 @@ export default function RoomPage() {
     setFinishError("");
 
     try {
-<<<<<<< HEAD
       const response = await SessionApi.finishSession(
         session?.public_id || session?.publicId || params.id,
         {
@@ -179,23 +144,13 @@ export default function RoomPage() {
           programmingLanguage: editorLanguage,
         },
       );
-=======
-      const response = await SessionApi.finishSession(params.id, {
-        code: editorCode,
-        programmingLanguage: editorLanguage,
-      });
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
 
       if (response.statusCode === 200) {
         setSession(response.data.session);
         setStatus(response.data.session.status);
         setFeedback(response.data.feedback);
-<<<<<<< HEAD
         window.localStorage.removeItem(editorStorageKey);
         setIsFeedbackOpen(Boolean(response.data.feedback));
-=======
-        setIsFeedbackOpen(true);
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
         return;
       }
 
@@ -209,7 +164,6 @@ export default function RoomPage() {
     }
   }
 
-<<<<<<< HEAD
   function handleProcessedMessage(
     response: Awaited<ReturnType<typeof SessionApi.createMessage>>,
   ) {
@@ -299,63 +253,6 @@ export default function RoomPage() {
     } finally {
       setIsWaitingForAi(false);
     }
-=======
-  async function handleSendChatMessage(content: string) {
-    const response = await SessionApi.createMessage(params.id, {
-      content,
-      source: "chat",
-    });
-
-    if (response.statusCode !== 201) {
-      setFinishError(
-        response.error || response.message || "Не удалось отправить сообщение",
-      );
-      return;
-    }
-
-    setSession((prev) =>
-      prev
-        ? {
-            ...prev,
-            messages: [
-              ...(prev.messages ?? []),
-              response.data.userMessage,
-              response.data.assistantMessage,
-            ],
-          }
-        : prev,
-    );
-  }
-
-  async function handleSubmitCode(code: string) {
-    setEditorCode(code);
-
-    const response = await SessionApi.createMessage(params.id, {
-      content: "Проверь моё решение",
-      code,
-      source: "editor",
-    });
-
-    if (response.statusCode !== 201) {
-      setFinishError(
-        response.error || response.message || "Не удалось отправить код",
-      );
-      return;
-    }
-
-    setSession((prev) =>
-      prev
-        ? {
-            ...prev,
-            messages: [
-              ...(prev.messages ?? []),
-              response.data.userMessage,
-              response.data.assistantMessage,
-            ],
-          }
-        : prev,
-    );
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   }
 
   return (
@@ -384,7 +281,6 @@ export default function RoomPage() {
       {sessionError ? <p className={styles.error}>{sessionError}</p> : null}
       {finishError ? <p className={styles.error}>{finishError}</p> : null}
 
-<<<<<<< HEAD
       {session && isLiveSession ? (
         <LiveInterviewRoom
           session={session}
@@ -451,49 +347,6 @@ export default function RoomPage() {
                 Закрыть
               </button>
             </div>
-=======
-      <div className={styles.workspace}>
-        <Chat
-          messages={session?.messages ?? []}
-          disabled={isRoomDisabled}
-          onSendMessage={handleSendChatMessage}
-        />
-        <Redactor
-          disabled={isRoomDisabled}
-          initialCode={starterCode}
-          language={editorLanguage}
-          onChange={setEditorCode}
-          onSubmitCode={handleSubmitCode}
-        />
-      </div>
-
-      {isFeedbackOpen ? (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.35)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "24px",
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "#ffffff",
-              color: "#111111",
-              width: "100%",
-              maxWidth: "720px",
-              padding: "24px",
-            }}
-          >
-            <h3>Feedback по интервью</h3>
-            <p style={{ whiteSpace: "pre-wrap" }}>{feedback}</p>
-            <button type="button" onClick={() => setIsFeedbackOpen(false)}>
-              Закрыть
-            </button>
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
           </div>
         </div>
       ) : null}

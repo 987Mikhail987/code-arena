@@ -32,7 +32,6 @@ export default function Redactor({
   onSubmitCode,
   disabled = false,
 }: CodeEditorProps) {
-<<<<<<< HEAD
   const [terminalOutput, setTerminalOutput] = useState([
     "Терминал готов к запуску.",
   ]);
@@ -41,20 +40,6 @@ export default function Redactor({
 
   const handleEditorChange = (value: string | undefined) => {
     if (!disabled && value !== undefined) {
-=======
-  const [code, setCode] = useState(initialCode);
-  const [terminalMessage, setTerminalMessage] = useState(
-    "Терминал готов к запуску.",
-  );
-
-  useEffect(() => {
-    setCode(initialCode);
-  }, [initialCode]);
-
-  const handleEditorChange = (value: string | undefined) => {
-    if (!disabled && value !== undefined) {
-      setCode(value);
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
       onChange?.(value);
     }
   };
@@ -64,7 +49,6 @@ export default function Redactor({
       return;
     }
 
-<<<<<<< HEAD
     if (language !== "javascript") {
       setTerminalOutput([
         "Локальный запуск пока доступен только для JavaScript.",
@@ -154,16 +138,11 @@ export default function Redactor({
 
     onSubmitCode?.(currentCode);
     setTerminalOutput(["Код отправлен на проверку AI."]);
-=======
-    onSubmitCode?.(code);
-    setTerminalMessage("Код отправлен на проверку.");
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   };
 
   return (
     <div className={styles.editorShell}>
       <div className={styles.editorPanel}>
-<<<<<<< HEAD
         <div className={styles.editorViewport}>
           <Editor
             height="100%"
@@ -200,35 +179,6 @@ export default function Redactor({
             ? "Интервью завершено. Запуск недоступен."
             : terminalOutput.join("\n")}
         </pre>
-=======
-        <Editor
-          height="420px"
-          width="100%"
-          language={language}
-          defaultValue={initialCode}
-          value={code}
-          onChange={handleEditorChange}
-          theme="vs-dark"
-          options={{
-            fontSize: 14,
-            minimap: { enabled: false },
-            readOnly: disabled,
-          }}
-        />
-      </div>
-      <section className={styles.terminal}>
-        <div>
-          <h3>Терминал</h3>
-          <p>
-            {disabled
-              ? "Интервью завершено. Запуск недоступен."
-              : terminalMessage}
-          </p>
-        </div>
-        <button type="button" onClick={handleRunCode} disabled={disabled}>
-          Запустить
-        </button>
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
       </section>
     </div>
   );

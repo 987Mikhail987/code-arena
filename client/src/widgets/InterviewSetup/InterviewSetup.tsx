@@ -27,7 +27,6 @@ export function InterviewSetup({
     useState<ProgrammingLanguageType>("javascript");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-<<<<<<< HEAD
 const tema = [
   "Алгоритмы",
   "Структуры данных",
@@ -77,9 +76,6 @@ const tema = [
   "KISS",
   "DRY",
   "YAGNI"]
-=======
-
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   const handleStart = async () => {
     setIsLoading(true);
     setError("");
@@ -88,31 +84,19 @@ const tema = [
       const interview = await SessionApi.createSession({
         type: interviewType,
         level,
-<<<<<<< HEAD
         topic: topic.trim()
           ? topic.trim()
           : tema[Math.floor(Math.random() * tema.length)],
-=======
-        topic: topic.trim() ? topic.trim() : "Тренировочное интервью",
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
         programmingLanguage: language,
       });
 
       if (interview.statusCode === 201 && interview.data?.id) {
-<<<<<<< HEAD
         onStart(interview.data.public_id || interview.data.id);
-=======
-        onStart(interview.data.id);
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
         return;
       }
 
       if (interview.statusCode === 409 && interview.data?.id) {
-<<<<<<< HEAD
         onStart(interview.data.public_id || interview.data.id);
-=======
-        onStart(interview.data.id);
->>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
         return;
       }
 
