@@ -31,7 +31,7 @@ export default function SignInForm() {
   });
 
   async function signInHandler(values: LoginFormValues) {
-    const { statusCode, data, error } = await UserApi.login(values);
+    const { statusCode, data } = await UserApi.login(values);
 
     if (statusCode === 200) {
       setAccessToken(data.accessToken);
@@ -41,7 +41,7 @@ export default function SignInForm() {
     }
 
     setError("root", {
-      message: error || "Ошибка при входе",
+      message: "Неправильный логин или пароль",
     });
   }
 

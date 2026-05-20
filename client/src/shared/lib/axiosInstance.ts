@@ -12,6 +12,10 @@ export function setAccessToken(newToken: string) {
   accessToken = newToken;
 }
 
+export function getAccessToken() {
+  return accessToken;
+}
+
 axiosInstance.interceptors.request.use((config) => {
   if (accessToken && !config.headers.Authorization) {
     config.headers.Authorization = `Bearer ${accessToken}`;

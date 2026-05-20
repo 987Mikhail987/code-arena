@@ -36,6 +36,25 @@ module.exports = {
         type: Sequelize.TEXT,
         allowNull: false,
       },
+      programming_language: {
+        type: Sequelize.ENUM(
+          "javascript",
+          "typescript",
+          "python",
+          "go",
+          "html",
+          "css",
+          "java",
+          "c",
+          "csharp",
+        ),
+        allowNull: false,
+        defaultValue: "javascript",
+      },
+      public_id: {
+        type: Sequelize.TEXT,
+        unique: true,
+      },
       result: {
         type: Sequelize.JSONB,
         allowNull: true,
@@ -54,8 +73,17 @@ module.exports = {
   },
   async down(queryInterface) {
     await queryInterface.dropTable("Sessions");
-    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_Sessions_type";');
-    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_Sessions_status";');
-    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_Sessions_level";');
+    await queryInterface.sequelize.query(
+      'DROP TYPE IF EXISTS "enum_Sessions_type";',
+    );
+    await queryInterface.sequelize.query(
+      'DROP TYPE IF EXISTS "enum_Sessions_status";',
+    );
+    await queryInterface.sequelize.query(
+      'DROP TYPE IF EXISTS "enum_Sessions_level";',
+    );
+    await queryInterface.sequelize.query(
+      'DROP TYPE IF EXISTS "enum_Sessions_programming_language";',
+    );
   },
 };

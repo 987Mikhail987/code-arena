@@ -1,16 +1,16 @@
 .profilePage {
   display: grid;
   gap: 24px;
-  padding: 36px 0 56px;
+  padding: 36px 0 0;
 }
 
 .heroCard {
   padding: 32px;
   border: 1px solid var(--border);
-  border-radius: 24px;
+  border-radius: 8px;
   background:
-    radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 40%),
-    linear-gradient(135deg, rgba(22, 27, 34, 0.96), rgba(15, 23, 42, 0.9));
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, transparent), transparent 44%),
+    color-mix(in srgb, var(--surface) 92%, transparent);
   box-shadow: var(--shadow);
 }
 
@@ -48,10 +48,10 @@
   align-items: center;
   min-height: 38px;
   padding: 0 16px;
-  border-radius: 999px;
+  border-radius: 8px;
   border: 1px solid var(--border);
-  background-color: rgba(56, 189, 248, 0.1);
-  color: #bae6fd;
+  background-color: var(--accent-muted);
+  color: var(--accent-strong);
   font-weight: 700;
 }
 
@@ -64,8 +64,8 @@
 .card {
   padding: 28px;
   border: 1px solid var(--border);
-  border-radius: 22px;
-  background-color: rgba(22, 27, 34, 0.84);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--surface) 88%, transparent);
   box-shadow: var(--shadow);
 }
 
@@ -73,6 +73,24 @@
   margin: 0 0 18px;
   font-size: 22px;
   color: var(--foreground);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.sectionHeader .cardTitle {
+  margin-bottom: 8px;
+}
+
+.sectionSubtitle {
+  margin: 0;
+  color: var(--foreground-muted);
+  line-height: 1.5;
 }
 
 .form {
@@ -99,6 +117,21 @@
   width: 100%;
   appearance: none;
   cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+    linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+  background-position:
+    calc(100% - 22px) 28px,
+    calc(100% - 16px) 28px;
+  background-size:
+    6px 6px,
+    6px 6px;
+  background-repeat: no-repeat;
+}
+
+.select option {
+  background-color: var(--surface);
+  color: var(--foreground);
 }
 
 .selectLabel {
@@ -110,7 +143,7 @@
 .dangerButton {
   min-height: 52px;
   border: 0;
-  border-radius: 16px;
+  border-radius: 8px;
   padding: 0 18px;
   font-weight: 700;
   transition:
@@ -120,21 +153,22 @@
 }
 
 .primaryButton {
-  background: var(--accent);
-  color: #061018;
-  box-shadow: 0 14px 28px rgba(56, 189, 248, 0.18);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff7f4;
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .secondaryButton {
   border: 1px solid var(--border);
-  background-color: rgba(148, 163, 184, 0.08);
+  background-color: color-mix(in srgb, var(--foreground-muted) 8%, transparent);
   color: var(--foreground);
 }
 
 .dangerButton {
-  background: linear-gradient(135deg, var(--danger), var(--danger-strong));
+  border: 1px solid #b91c1c;
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
   color: #fff7f7;
-  box-shadow: 0 14px 28px rgba(239, 68, 68, 0.18);
+  box-shadow: 0 14px 28px rgba(220, 38, 38, 0.24);
 }
 
 .primaryButton:hover,
@@ -162,6 +196,135 @@
   color: var(--foreground-muted);
 }
 
+.sessionsList {
+  display: grid;
+  max-height: 560px;
+  gap: 16px;
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) color-mix(in srgb, var(--surface-muted) 62%, transparent);
+}
+
+.sessionCard {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--control-bg) 74%, transparent);
+}
+
+.sessionCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.sessionCardHeader h3,
+.sessionCardHeader p {
+  margin: 0;
+}
+
+.sessionCardHeader h3 {
+  font-size: 18px;
+  color: var(--foreground);
+}
+
+.sessionCardHeader p {
+  margin-top: 6px;
+  color: var(--foreground-muted);
+  font-size: 13px;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--accent-muted);
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.sessionMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sessionMeta span {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--foreground-muted);
+  font-size: 13px;
+}
+
+.feedbackPreview {
+  display: -webkit-box;
+  max-height: 72px;
+  margin: 0;
+  overflow: hidden;
+  color: var(--foreground-muted);
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.sessionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sessionActions .primaryButton,
+.sessionActions .secondaryButton,
+.sessionActions .dangerButton {
+  min-height: 42px;
+}
+
+.sessionActions .dangerButton {
+  margin-left: auto;
+}
+
+.messagesList {
+  display: grid;
+  max-height: 320px;
+  gap: 10px;
+  overflow-y: auto;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--surface) 72%, transparent);
+}
+
+.messageItem {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--surface) 86%, transparent);
+}
+
+.messageItem strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.messageItem p {
+  margin: 0;
+  color: var(--foreground-muted);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
 @media (max-width: 860px) {
   .grid {
     grid-template-columns: 1fr;
@@ -170,16 +333,27 @@
 
 @media (max-width: 640px) {
   .profilePage {
-    padding: 24px 0 40px;
+    padding: 24px 0 0;
   }
 
   .heroCard,
   .card {
     padding: 22px;
-    border-radius: 24px;
+    border-radius: 8px;
   }
 
   .actions {
     flex-direction: column;
+  }
+
+  .sectionHeader,
+  .sessionCardHeader,
+  .sessionActions {
+    flex-direction: column;
+  }
+
+  .sessionActions .dangerButton {
+    width: 100%;
+    margin-left: 0;
   }
 }
