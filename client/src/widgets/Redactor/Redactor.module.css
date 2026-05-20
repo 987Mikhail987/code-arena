@@ -1,6 +1,10 @@
 .editorShell {
+<<<<<<< HEAD
   height: 70vh;
   max-height: 70vh;
+=======
+  min-height: 520px;
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   display: grid;
   grid-template-rows: 1fr auto;
   gap: 14px;
@@ -13,12 +17,16 @@
 }
 
 .editorPanel {
+<<<<<<< HEAD
   min-height: 0;
+=======
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 6px;
 }
 
+<<<<<<< HEAD
 .editorViewport {
   height: 100%;
   min-height: 0;
@@ -56,6 +64,13 @@
 .terminal {
   display: grid;
   gap: 12px;
+=======
+.terminal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   padding: 14px;
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -64,6 +79,7 @@
     var(--control-bg);
 }
 
+<<<<<<< HEAD
 .terminalHeader {
   display: flex;
   align-items: center;
@@ -72,6 +88,10 @@
 }
 
 .terminal h3 {
+=======
+.terminal h3,
+.terminal p {
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   margin: 0;
 }
 
@@ -79,6 +99,7 @@
   font-size: 15px;
 }
 
+<<<<<<< HEAD
 .terminalActions {
   display: flex;
   flex-wrap: wrap;
@@ -102,6 +123,15 @@
 }
 
 .terminalActions button {
+=======
+.terminal p {
+  margin-top: 4px;
+  color: var(--foreground-muted);
+  font-size: 13px;
+}
+
+.terminal button {
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   min-height: 42px;
   padding: 0 18px;
   border: 0;
@@ -112,6 +142,7 @@
   transition: transform 0.2s ease;
 }
 
+<<<<<<< HEAD
 .terminalActions button:hover {
   transform: translateY(-1px);
 }
@@ -131,4 +162,15 @@
   .terminalActions {
     flex-direction: column;
   }
+=======
+.terminal button:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 560px) {
+  .terminal {
+    align-items: stretch;
+    flex-direction: column;
+  }
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
 }

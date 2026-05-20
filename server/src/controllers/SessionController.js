@@ -24,12 +24,18 @@ function buildFallbackFirstMessage(level, programmingLanguage, topic) {
     `Уровень: ${level}.`,
     `Язык программирования: ${programmingLanguage}.`,
     topic ? `Тема: ${topic}.` : "",
+<<<<<<< HEAD
     "Начнём как на реальном собеседовании: сначала несколько теоретических вопросов, затем перейдём к практической задаче.",
     "Первый вопрос: объясни ключевую идею выбранной темы и назови типичные ошибки, которые могут возникнуть при её использовании.",
+=======
+    "Первая задача:",
+    "Опиши, как бы ты решил задачу по выбранной теме, и затем напиши рабочее решение в редакторе.",
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   ]
     .filter(Boolean)
     .join("\n\n");
 }
+<<<<<<< HEAD
 
 function buildSessionMessages(session) {
   return (session.messages || []).map((message) => ({
@@ -82,6 +88,8 @@ async function finishSessionWithFeedback({
     feedback,
   };
 }
+=======
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
 
 class SessionController {
   static async createSession(req, res) {
@@ -144,7 +152,10 @@ class SessionController {
         level,
         topic: topic.trim(),
         programming_language: programmingLanguage,
+<<<<<<< HEAD
         public_id: type === "live" ? generatePublicId() : null,
+=======
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
       });
 
       let firstMessage = null;
@@ -175,9 +186,13 @@ class SessionController {
               programmingLanguage,
               topic.trim(),
             ),
+<<<<<<< HEAD
             metadata: {
               itemType: "theory",
             },
+=======
+            metadata: null,
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
           });
         }
       }
@@ -266,6 +281,7 @@ class SessionController {
   static async deleteUserSession(req, res) {
     const { user } = res.locals;
     const { sessionId } = req.params;
+    const { code = "", programmingLanguage } = req.body || {};
 
     if (Number.isNaN(Number(sessionId))) {
       return res
@@ -274,10 +290,14 @@ class SessionController {
     }
 
     try {
+<<<<<<< HEAD
       const deletedCount = await SessionService.deleteUserSession(
         sessionId,
         user.id,
       );
+=======
+      const session = await SessionService.getUserSessionById(sessionId, user.id);
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
 
       if (deletedCount === 0) {
         return res
@@ -285,6 +305,7 @@ class SessionController {
           .json(formatResponse(404, "Тренировочная сессия не найдена"));
       }
 
+<<<<<<< HEAD
       return res
         .status(200)
         .json(formatResponse(200, "Тренировочная сессия удалена"));
@@ -314,6 +335,8 @@ class SessionController {
           .json(formatResponse(404, "Тренировочная сессия не найдена"));
       }
 
+=======
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
       if (session.status === "complited") {
         return res.status(200).json(
           formatResponse(200, "Тренировочная сессия завершена", {
@@ -323,6 +346,7 @@ class SessionController {
         );
       }
 
+<<<<<<< HEAD
       if (session.type === "live") {
         const resultMessages = buildSessionMessages(session);
         const finishedSession = await SessionService.finishSession(
@@ -356,16 +380,56 @@ class SessionController {
         },
         sessionId,
         userId: user.id,
+=======
+      const resultMessages = (session.messages || []).map((message) => ({
+        id: message.id,
+        role: message.role,
+        content: message.content,
+        metadata: message.metadata || null,
+        createdAt: message.createdAt,
+      }));
+
+      const result = await AiService.getInterviewResult({
+        difficulty: session.level,
+        programmingLanguage:
+          session.programming_language || programmingLanguage || "javascript",
+        topic: session.topic,
+        messages: resultMessages,
+      });
+
+      const feedback = await AiService.generateInterviewFeedback({
+        difficulty: session.level,
+        programmingLanguage:
+          session.programming_language || programmingLanguage || "javascript",
+        topic: session.topic,
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
         messages: resultMessages,
         code,
       });
 
+<<<<<<< HEAD
       return res.status(200).json(
         formatResponse(200, "Тренировочная сессия завершена", {
           session: {
             ...finishedSession.get(),
             messages: resultMessages,
           },
+=======
+      const finishedSession = await SessionService.finishSession(
+        sessionId,
+        user.id,
+        {
+          summary: result,
+          messages: resultMessages,
+          code: typeof code === "string" ? code : "",
+          feedback,
+        },
+      );
+
+      return res.status(200).json(
+        formatResponse(200, "Тренировочная сессия завершена", {
+          session: finishedSession,
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
           feedback,
         }),
       );
@@ -425,6 +489,7 @@ class SessionController {
           .json(formatResponse(404, "Тренировочная сессия не найдена"));
       }
 
+<<<<<<< HEAD
       const resultMessages = buildSessionMessages(session);
       const contextLength = AiService.getContextLength({
         topic: session.topic,
@@ -479,13 +544,19 @@ class SessionController {
         );
       }
 
+=======
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
       const aiData = await AiService.getAiAnswer({
         difficulty: session.level,
         programmingLanguage: session.programming_language,
         topic: session.topic,
+<<<<<<< HEAD
         message: content.trim() || "Проверь моё решение",
         messages: resultMessages,
         code: code.trim(),
+=======
+        messages: session.messages,
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
       });
 
       const assistantMessage = await MessageService.createSessionMessage(sessionId, {

@@ -51,10 +51,13 @@ module.exports = {
         allowNull: false,
         defaultValue: "javascript",
       },
+<<<<<<< HEAD
       public_id: {
         type: Sequelize.TEXT,
         unique: true,
       },
+=======
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
       result: {
         type: Sequelize.JSONB,
         allowNull: true,

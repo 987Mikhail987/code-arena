@@ -74,6 +74,7 @@
   align-self: flex-start;
   max-width: 88%;
   background-color: color-mix(in srgb, var(--foreground-muted) 10%, transparent);
+<<<<<<< HEAD
 }
 
 .typingIndicator {
@@ -85,6 +86,8 @@
   color: var(--foreground);
   background-color: color-mix(in srgb, var(--foreground-muted) 10%, transparent);
   opacity: 0.9;
+=======
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
 }
 
 .form {
@@ -114,6 +117,7 @@
   scrollbar-color: var(--accent) color-mix(in srgb, var(--surface-muted) 62%, transparent);
 }
 
+<<<<<<< HEAD
 .form textarea::placeholder {
   color: var(--foreground-muted);
 }
@@ -134,6 +138,10 @@
 .form textarea::-webkit-scrollbar-thumb {
   border-radius: 999px;
   background: color-mix(in srgb, var(--accent) 60%, transparent);
+=======
+.form input:focus {
+  border-color: color-mix(in srgb, var(--accent) 72%, transparent);
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
 }
 
 .form button {

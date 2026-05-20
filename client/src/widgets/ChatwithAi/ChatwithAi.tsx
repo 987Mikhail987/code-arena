@@ -3,10 +3,13 @@
 import React, { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import styles from "./ChatwithAi.module.css";
 import type { MessageType } from "@/entities/session/model/types";
+<<<<<<< HEAD
 
 type SpeechRecognitionAlternative = {
   transcript: string;
 };
+=======
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
 
 type SpeechRecognitionResult = {
   isFinal: boolean;
@@ -107,6 +110,7 @@ export default function Chat({
   disabled = false,
 }: ChatProps) {
   const [inputValue, setInputValue] = useState("");
+<<<<<<< HEAD
   const [isRecording, setIsRecording] = useState(false);
   const [voiceError, setVoiceError] = useState("");
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
@@ -158,6 +162,8 @@ export default function Chat({
     hasRecognizedSpeechRef.current = false;
     setVoiceError("");
   };
+=======
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -168,6 +174,7 @@ export default function Chat({
       return;
     }
 
+<<<<<<< HEAD
     isStoppingRef.current = true;
     resetVoiceState();
     recognitionRef.current?.stop();
@@ -259,13 +266,21 @@ export default function Chat({
     setVoiceError("");
     setIsRecording(true);
     recognition.start();
+=======
+    onSendMessage?.(trimmedValue);
+    setInputValue("");
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   };
 
   return (
     <section className={styles.chat}>
       <h3>{title}</h3>
 
+<<<<<<< HEAD
       <div ref={messagesContainerRef} className={styles.messages}>
+=======
+      <div className={styles.messages}>
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
         {messages.length === 0 ? (
           <div className={styles.emptyState}>Начните диалог с AI</div>
         ) : (
@@ -301,6 +316,7 @@ export default function Chat({
           rows={1}
           value={inputValue}
           onChange={(event) => setInputValue(event.target.value)}
+<<<<<<< HEAD
           onKeyDown={handleKeyDown}
           placeholder={disabled ? "Интервью завершено" : placeholder}
           disabled={disabled}
@@ -321,6 +337,11 @@ export default function Chat({
         >
           {isRecording ? "Стоп" : "Голосовой ввод"}
         </button>
+=======
+          placeholder={disabled ? "Интервью завершено" : placeholder}
+          disabled={disabled}
+        />
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
         <button type="submit" disabled={disabled || !inputValue.trim()}>
           Отправить
         </button>

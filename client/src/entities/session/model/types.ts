@@ -13,6 +13,7 @@ export type ProgrammingLanguageType =
   | "csharp";
 
 export type MessageMetadataType = {
+<<<<<<< HEAD
   source?: "chat" | "editor" | "live-chat";
   code?: string | null;
   finishReason?: string;
@@ -20,6 +21,10 @@ export type MessageMetadataType = {
   senderName?: string;
   senderRole?: string;
   itemType?: "practice" | "theory";
+=======
+  source?: "chat" | "editor";
+  code?: string | null;
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   task?: {
     description?: string;
     starterCode?: string;
@@ -46,7 +51,10 @@ export type SessionResultType = {
   messages: MessageType[];
   code: string;
   feedback: string;
+<<<<<<< HEAD
   finishReason?: string;
+=======
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
 };
 
 export type SessionType = {
@@ -59,6 +67,7 @@ export type SessionType = {
   status: SessionStatusType;
   programming_language?: ProgrammingLanguageType;
   programmingLanguage?: ProgrammingLanguageType;
+<<<<<<< HEAD
   public_id?: string | null;
   publicId?: string | null;
   user?: {
@@ -67,6 +76,8 @@ export type SessionType = {
     email: string;
     role: string;
   };
+=======
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
   messages?: MessageType[];
   result?: SessionResultType;
   createdAt: string;
@@ -87,9 +98,13 @@ export type CreateMessageParamsType = {
 
 export type CreateMessageResponseType = {
   userMessage: MessageType;
+<<<<<<< HEAD
   assistantMessage?: MessageType | null;
   session?: SessionType;
   feedback?: string;
   isFinished?: boolean;
   finishReason?: string;
+=======
+  assistantMessage: MessageType;
+>>>>>>> 54c6f02728c93576479ea158cb20330334fa53da
 };
