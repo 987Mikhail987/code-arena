@@ -64,6 +64,18 @@
   color: var(--danger);
 }
 
+.interviewHint {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 58%),
+    color-mix(in srgb, var(--surface) 90%, transparent);
+  color: color-mix(in srgb, var(--foreground) 90%, var(--accent));
+  line-height: 1.5;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(280px, 0.95fr) minmax(360px, 1.25fr);
