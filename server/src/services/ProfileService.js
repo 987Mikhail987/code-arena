@@ -1,4 +1,21 @@
+const fs = require("fs/promises");
+const path = require("path");
 const { User } = require("../db/models");
+
+async function removeUploadedAvatar(avatarUrl) {
+  if (!avatarUrl || !avatarUrl.startsWith("/uploads/avatars/")) {
+    return;
+  }
+
+  const fileName = path.basename(avatarUrl);
+  const filePath = path.join(__dirname, "../public/uploads/avatars", fileName);
+
+  try {
+    await fs.unlink(filePath);
+  } catch {
+    // Старый файл мог быть уже удален вручную.
+  }
+}
 
 class ProfileService {
   static async getOneProfile(userId) {
@@ -35,6 +52,20 @@ class ProfileService {
     }
 
     await user.save();
+    return user.get();
+  }
+
+  static async updateAvatar(userId, avatarUrl) {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return null;
+    }
+
+    const previousAvatarUrl = user.avatar_url;
+    user.avatar_url = avatarUrl;
+    await user.save();
+    await removeUploadedAvatar(previousAvatarUrl);
+
     return user.get();
   }
 

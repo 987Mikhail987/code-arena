@@ -29,10 +29,15 @@
 }
 
 .chat,
-.editorShell {
+.codePanel {
   height: 70vh;
   max-height: 70vh;
   min-height: 520px;
+}
+
+.chat,
+.editorShell,
+.liveConsole {
   border: 1px solid var(--border);
   border-radius: 8px;
   background-color: color-mix(in srgb, var(--surface) 90%, transparent);
@@ -79,15 +84,46 @@
 }
 
 .message {
+  display: flex;
+  gap: 10px;
   align-self: flex-start;
   max-width: 88%;
   background-color: color-mix(in srgb, var(--foreground-muted) 10%, transparent);
 }
 
 .ownMessage {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 10px;
   align-self: flex-end;
   max-width: 88%;
   background-color: var(--accent-muted);
+}
+
+.messageAvatar {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff7f4;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.messageAvatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.messageBody {
+  min-width: 0;
 }
 
 .form {
@@ -139,6 +175,7 @@
   display: grid;
   grid-template-rows: auto 1fr;
   overflow: hidden;
+  min-height: 0;
 }
 
 .editorHeader {
@@ -160,6 +197,84 @@
   min-height: 0;
 }
 
+.codePanel {
+  display: grid;
+  grid-template-rows: minmax(280px, 1fr) auto;
+  gap: 14px;
+  min-width: 0;
+}
+
+.liveConsole {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 46%),
+    var(--control-bg);
+}
+
+.consoleHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.consoleHeader h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.consoleHeader span {
+  display: block;
+  margin-top: 4px;
+  color: var(--foreground-muted);
+  font-size: 12px;
+}
+
+.consoleActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.consoleActions button {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff7f4;
+  font-weight: 800;
+  transition: transform 0.2s ease;
+}
+
+.consoleActions button:hover {
+  transform: translateY(-1px);
+}
+
+.consoleActions button:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.consoleOutput {
+  min-height: 72px;
+  max-height: 120px;
+  margin: 0;
+  overflow: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: color-mix(in srgb, #000 34%, transparent);
+  color: var(--foreground-muted);
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
 @media (max-width: 920px) {
   .workspace {
     grid-template-columns: 1fr;
@@ -171,7 +286,20 @@
     flex-direction: column;
   }
 
+  .consoleHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .consoleActions {
+    flex-direction: column;
+  }
+
   .form button {
+    width: 100%;
+  }
+
+  .consoleActions button {
     width: 100%;
   }
 }

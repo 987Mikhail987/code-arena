@@ -75,7 +75,7 @@ export default function RoomPage() {
           setSession(response.data);
           setStatus(response.data.status);
 
-          if (response.data.result?.feedback) {
+          if (response.data.type === "ai" && response.data.result?.feedback) {
             setFeedback(response.data.result.feedback);
           }
 
@@ -127,7 +127,7 @@ export default function RoomPage() {
 
   async function handleFinishInterview() {
     if (isComplited) {
-      if (feedback) {
+      if (!isLiveSession && feedback) {
         setIsFeedbackOpen(true);
       }
       return;
@@ -148,9 +148,9 @@ export default function RoomPage() {
       if (response.statusCode === 200) {
         setSession(response.data.session);
         setStatus(response.data.session.status);
-        setFeedback(response.data.feedback);
+        setFeedback(response.data.feedback || "");
         window.localStorage.removeItem(editorStorageKey);
-        setIsFeedbackOpen(Boolean(response.data.feedback));
+        setIsFeedbackOpen(!isLiveSession && Boolean(response.data.feedback));
         return;
       }
 
@@ -262,20 +262,22 @@ export default function RoomPage() {
           <p>Комната интервью</p>
           <h2>Добро пожаловать на собеседование</h2>
         </div>
-        <button
-          type="button"
-          className={styles.finishButton}
-          onClick={handleFinishInterview}
-          disabled={isLoadingSession || Boolean(sessionError) || isFinishing}
-        >
-          {isLoadingSession
-            ? "Загружаем..."
-            : isComplited
-              ? "Показать feedback"
-              : isFinishing
-                ? "Завершаем..."
-                : "Завершить интервью"}
-        </button>
+        {!isComplited || !isLiveSession ? (
+          <button
+            type="button"
+            className={styles.finishButton}
+            onClick={handleFinishInterview}
+            disabled={isLoadingSession || Boolean(sessionError) || isFinishing}
+          >
+            {isLoadingSession
+              ? "Загружаем..."
+              : isComplited
+                ? "Показать feedback"
+                : isFinishing
+                  ? "Завершаем..."
+                  : "Завершить интервью"}
+          </button>
+        ) : null}
       </section>
 
       {sessionError ? <p className={styles.error}>{sessionError}</p> : null}
@@ -308,7 +310,7 @@ export default function RoomPage() {
         </div>
       )}
 
-      {isFeedbackOpen ? (
+      {!isLiveSession && isFeedbackOpen ? (
         <div
           className={styles.feedbackOverlay}
           onClick={() => setIsFeedbackOpen(false)}

@@ -10,6 +10,7 @@ import type {
 import { selectUser } from "@/entities/user/model/selectors";
 import { createLiveSocket, type LiveSocket } from "@/shared/lib/liveSocket";
 import { LiveCodeEditor } from "./LiveCodeEditor";
+import { LiveConsole } from "./LiveConsole";
 import { LiveInterviewChat } from "./LiveInterviewChat";
 import styles from "./LiveInterviewRoom.module.css";
 
@@ -50,6 +51,7 @@ export function LiveInterviewRoom({
   );
   const [connectionError, setConnectionError] = useState("");
   const [isConnected, setIsConnected] = useState(false);
+  const [currentCode, setCurrentCode] = useState(initialCode);
   const [presence, setPresence] = useState<LiveParticipantPresence>({
     candidateConnected: currentUser?.role === "candidate",
     interviewerConnected: currentUser?.role === "intervier",
@@ -126,6 +128,11 @@ export function LiveInterviewRoom({
     });
   }
 
+  function handleCodeChange(code: string) {
+    setCurrentCode(code);
+    onCodeChange?.(code);
+  }
+
   return (
     <div className={styles.liveRoom}>
       <div className={connectionError ? styles.errorStatus : styles.status}>
@@ -139,14 +146,23 @@ export function LiveInterviewRoom({
           currentUserId={currentUser?.id}
           onSendMessage={handleSendMessage}
         />
-        <LiveCodeEditor
-          socket={socket}
-          roomId={roomId}
-          initialCode={initialCode}
-          language={language}
-          disabled={disabled}
-          onCodeChange={onCodeChange}
-        />
+        <div className={styles.codePanel}>
+          <LiveCodeEditor
+            socket={socket}
+            roomId={roomId}
+            initialCode={initialCode}
+            language={language}
+            disabled={disabled}
+            onCodeChange={handleCodeChange}
+          />
+          <LiveConsole
+            socket={socket}
+            roomId={roomId}
+            code={currentCode}
+            language={language}
+            disabled={disabled || !isConnected}
+          />
+        </div>
       </div>
     </div>
   );

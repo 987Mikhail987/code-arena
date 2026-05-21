@@ -121,6 +121,45 @@ class ProfileController {
     }
   }
 
+  static async updateAvatar(req, res) {
+    const { user } = res.locals;
+
+    if (Number.isNaN(Number(user?.id))) {
+      return res
+        .status(400)
+        .json(formatResponse(400, "Неверный формат ID пользователя"));
+    }
+
+    if (!req.file) {
+      return res
+        .status(400)
+        .json(formatResponse(400, "Аватарка не выбрана"));
+    }
+
+    try {
+      const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+      const updatedProfile = await ProfileService.updateAvatar(user.id, avatarUrl);
+
+      if (!updatedProfile) {
+        return res
+          .status(404)
+          .json(formatResponse(404, "Профиль пользователя не найден"));
+      }
+
+      delete updatedProfile.password;
+
+      return res
+        .status(200)
+        .json(formatResponse(200, "Аватарка успешно обновлена", updatedProfile));
+    } catch (error) {
+      console.log("======== ProfileController.updateAvatar =========");
+      console.log(error);
+      return res
+        .status(500)
+        .json(formatResponse(500, "Ошибка при обновлении аватарки"));
+    }
+  }
+
   static async deleteProfile(req, res) {
     const { user } = res.locals;
     if (Number.isNaN(Number(user?.id))) {

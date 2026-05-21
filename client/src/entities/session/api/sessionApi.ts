@@ -98,7 +98,7 @@ export default class SessionApi {
   static async finishSession(
     sessionId: string,
     params: { code: string; programmingLanguage: string },
-  ): Promise<ApiResponse<{ session: SessionType; feedback: string }>> {
+  ): Promise<ApiResponse<{ session: SessionType; feedback?: string }>> {
     try {
       const response = await axiosInstance.patch(`/sessions/${sessionId}/finish`, params);
       return response.data;

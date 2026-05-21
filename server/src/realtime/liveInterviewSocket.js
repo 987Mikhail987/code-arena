@@ -6,6 +6,9 @@ const MessageService = require("../services/MessageService");
 const SessionService = require("../services/SessionService");
 
 const liveDocs = new Map();
+const liveConsoleResults = new Map();
+const MAX_CONSOLE_LINES = 50;
+const MAX_CONSOLE_LINE_LENGTH = 1000;
 
 function getCookieValue(cookieHeader, cookieName) {
   if (!cookieHeader) {
@@ -66,6 +69,16 @@ function normalizeUpdate(update) {
   return update instanceof Uint8Array ? update : Uint8Array.from(update || []);
 }
 
+function normalizeConsoleOutput(output) {
+  if (!Array.isArray(output)) {
+    return ["Код выполнен без вывода."];
+  }
+
+  return output
+    .slice(0, MAX_CONSOLE_LINES)
+    .map((line) => String(line).slice(0, MAX_CONSOLE_LINE_LENGTH));
+}
+
 async function emitParticipantPresence(io, publicId) {
   const roomName = `live:${publicId}`;
   const sockets = await io.in(roomName).fetchSockets();
@@ -124,6 +137,12 @@ function initLiveInterviewSocket(server) {
           roomId: session.public_id,
           sessionId: session.id,
         });
+
+        const consoleResult = liveConsoleResults.get(session.public_id);
+        if (consoleResult) {
+          socket.emit("live:console:result", consoleResult);
+        }
+
         await emitParticipantPresence(io, session.public_id);
       } catch {
         socket.emit("live:error", "Не удалось подключиться к live-интервью");
@@ -153,6 +172,7 @@ function initLiveInterviewSocket(server) {
             senderId: socket.data.user.id,
             senderName: socket.data.user.name,
             senderRole: socket.data.user.role,
+            senderAvatarUrl: socket.data.user.avatar_url || null,
           },
         });
 
@@ -166,6 +186,52 @@ function initLiveInterviewSocket(server) {
         });
       } catch {
         socket.emit("live:error", "Не удалось отправить сообщение");
+      }
+    });
+
+    socket.on("live:console:running", async ({ roomId }) => {
+      try {
+        const session = await getAccessibleLiveSession(roomId, socket.data.user);
+
+        if (!session || session.type !== "live") {
+          socket.emit("live:error", "Live-интервью не найдено");
+          return;
+        }
+
+        io.to(`live:${session.public_id}`).emit("live:console:running", {
+          runnerId: socket.data.user.id,
+          runnerName: socket.data.user.name,
+          runnerRole: socket.data.user.role,
+          startedAt: new Date().toISOString(),
+        });
+      } catch {
+        socket.emit("live:error", "Не удалось запустить код");
+      }
+    });
+
+    socket.on("live:console:result", async ({ roomId, status, output, language }) => {
+      try {
+        const session = await getAccessibleLiveSession(roomId, socket.data.user);
+
+        if (!session || session.type !== "live") {
+          socket.emit("live:error", "Live-интервью не найдено");
+          return;
+        }
+
+        const result = {
+          status: status === "error" ? "error" : "success",
+          output: normalizeConsoleOutput(output),
+          language: typeof language === "string" ? language : null,
+          runnerId: socket.data.user.id,
+          runnerName: socket.data.user.name,
+          runnerRole: socket.data.user.role,
+          executedAt: new Date().toISOString(),
+        };
+
+        liveConsoleResults.set(session.public_id, result);
+        io.to(`live:${session.public_id}`).emit("live:console:result", result);
+      } catch {
+        socket.emit("live:error", "Не удалось передать результат запуска");
       }
     });
 

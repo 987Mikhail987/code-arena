@@ -5,6 +5,8 @@ export type User = {
   name: string;
   email: string;
   role: UserRole;
+  avatar_url?: string | null;
+  avatarUrl?: string | null;
 };
 
 export type LoginData = {
