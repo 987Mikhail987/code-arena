@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const { Message, Session, SessionParticipant, User } = require("../db/models");
 
 const userInclude = {
