@@ -1,7 +1,7 @@
 const path = require('path');
 process.loadEnvFile(path.join(__dirname, '../../.env'));
 const jwt = require('jsonwebtoken');
-const JWTconfig = require('../config/JWTconfig');
+const JWTconfig = require('../config/jwtConfig');
 
 function generateTokens(payload) {
   return {
