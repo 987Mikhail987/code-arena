@@ -44,8 +44,8 @@ export default function AppShell({ children }: AppShellProps) {
       <footer className="app-footer">
         <div className="app-container footer-content">
           <p>
-            Отдельная благодарность нашим преподавателям !!! 
-            Тарас, Юра, Спасибо Вам за проделанную работу!!! 
+            Отдельная благодарность нашим преподавателям !!! <br />
+            Тарас, Юра, Спасибо Вам за проделанную работу!!!
           </p>
         </div>
       </footer>
