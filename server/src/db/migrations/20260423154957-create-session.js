@@ -55,6 +55,7 @@ module.exports = {
         type: Sequelize.TEXT,
         unique: true,
       },
+
       result: {
         type: Sequelize.JSONB,
         allowNull: true,

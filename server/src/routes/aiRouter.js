@@ -3,6 +3,6 @@ const verifyAccessToken = require("../middleware/verifyAccessToken");
 
 const aiRouter = require("express").Router();
 
-aiRouter.post("/", AiController.getAiAnswer);
+aiRouter.post("/",verifyAccessToken, AiController.getAiAnswer);
 
 module.exports = aiRouter;

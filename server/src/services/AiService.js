@@ -1,11 +1,3 @@
-try {
-  process.loadEnvFile();
-} catch (error) {
-  if (error.code !== "ENOENT") {
-    throw error;
-  }
-}
-
 const { GigaChat } = require("gigachat");
 const { Agent } = require("node:https");
 const { getAnswer } = require("../agent");
@@ -183,8 +175,8 @@ class AiService {
       `Язык: ${programmingLanguage}.`,
       normalizedTopic ? `Тема: ${normalizedTopic}.` : "Тема не указана.",
       `Если уровень === junior то давай максимально простые задачи по выбранной теме`,
-      "Первые шаги интервью должны быть теоретическими вопросами без задачи в редакторе.",
-      `До первой практической задачи задай ${THEORY_QUESTIONS_BEFORE_FIRST_TASK} теоретических вопроса.`,
+      `Первые шаги интервью должны быть теоретическими вопросами уровня ${difficulty} без задачи в редакторе.`,
+      `До первой практической задачи задай ${THEORY_QUESTIONS_BEFORE_FIRST_TASK} теоретических вопроса уровня ${difficulty}.`,
       `После теоретического блока выдай практическую задачу уровня ${difficulty} , связанную с обсужденными вопросами.`,
       "Дальше держи баланс: около 30% теория, 70% практика.",
       `Предпочтительный следующий шаг: ${nextItemDescription}.`,
@@ -248,7 +240,7 @@ class AiService {
           `Уровень: ${difficulty}.`,
           `Язык: ${programmingLanguage}.`,
           normalizedTopic ? `Тема: ${normalizedTopic}.` : "Тема не указана.",
-          "Сгенерируй именно теоретический вопрос для собеседования.",
+          `Сгенерируй именно теоретический вопрос уровня ${difficulty} для собеседования.`,
           `Если уровень === junior то давай максимально простой вопрос по выбранной теме`,
           "Не давай практическую задачу, starterCode, код или готовое решение.",
           "Верни только валидный JSON без markdown.",
