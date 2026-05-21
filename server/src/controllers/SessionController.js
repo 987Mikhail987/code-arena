@@ -351,6 +351,14 @@ class SessionController {
       }
 
       if (session.status === "complited") {
+        if (session.type === "live") {
+          return res.status(200).json(
+            formatResponse(200, "Live-интервью завершено", {
+              session,
+            }),
+          );
+        }
+
         return res.status(200).json(
           formatResponse(200, "Тренировочная сессия завершена", {
             session,
@@ -367,7 +375,6 @@ class SessionController {
           {
             messages: resultMessages,
             code: typeof code === "string" ? code : "",
-            feedback: "",
             finishReason: "manual",
           },
         );
@@ -378,7 +385,6 @@ class SessionController {
               ...finishedSession.get(),
               messages: resultMessages,
             },
-            feedback: "",
           }),
         );
       }

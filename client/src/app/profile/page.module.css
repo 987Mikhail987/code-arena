@@ -14,6 +14,35 @@
   box-shadow: var(--shadow);
 }
 
+.heroContent {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.profileAvatar {
+  width: 112px;
+  height: 112px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff7f4;
+  font-size: 42px;
+  font-weight: 800;
+}
+
+.profileAvatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
 .kicker {
   margin: 0 0 10px;
   color: var(--accent);
@@ -96,6 +125,35 @@
 .form {
   display: grid;
   gap: 16px;
+}
+
+.avatarUpload {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.fileButton {
+  position: relative;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 18px;
+  background-color: color-mix(in srgb, var(--foreground-muted) 8%, transparent);
+  color: var(--foreground);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fileButton input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .formField {
@@ -334,6 +392,17 @@
 @media (max-width: 640px) {
   .profilePage {
     padding: 24px 0 0;
+  }
+
+  .heroContent {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .profileAvatar {
+    width: 92px;
+    height: 92px;
+    font-size: 34px;
   }
 
   .heroCard,

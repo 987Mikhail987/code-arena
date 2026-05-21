@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 const formatResponse = require('../utils/formatResponse');
-process.loadEnvFile();
 
 function verifyAccessToken(req, res, next) {
   try {
@@ -14,6 +13,7 @@ function verifyAccessToken(req, res, next) {
         .json(formatResponse(403, 'Невалидный accessToken'));
     }
 
+    req.user = user;
     res.locals.user = user;
 
     next();

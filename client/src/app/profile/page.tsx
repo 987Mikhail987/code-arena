@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ReactNode, useEffect, useState } from "react";
+import { type ChangeEvent, ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
@@ -16,6 +16,7 @@ import {
   type ProfileFormValues,
 } from "@/entities/user/model/schemas";
 import { clearUser, setUser } from "@/entities/user/model/userSlice";
+import { getAvatarUrl, getUserInitial } from "@/shared/lib/avatar";
 import { setAccessToken } from "@/shared/lib/axiosInstance";
 import FormInput from "@/shared/ui/FormInput/FormInput";
 import styles from "./page.module.css";
@@ -26,6 +27,8 @@ export function ProfilePage(): ReactNode {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
   const [profileMessage, setProfileMessage] = useState("");
+  const [avatarMessage, setAvatarMessage] = useState("");
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState("");
   const [accountMessage, setAccountMessage] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -131,6 +134,31 @@ export function ProfilePage(): ReactNode {
       message:
         response?.error || response?.message || "Не удалось обновить профиль",
     });
+  }
+
+  async function uploadAvatarHandler(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    setAvatarMessage("");
+    setIsUploadingAvatar(true);
+
+    const response = await UserApi.uploadAvatar(file);
+
+    if (response?.statusCode === 200) {
+      dispatch(setUser(response.data));
+      setAvatarMessage("Аватарка успешно обновлена");
+    } else {
+      setAvatarMessage(
+        response?.error || response?.message || "Не удалось обновить аватарку",
+      );
+    }
+
+    event.target.value = "";
+    setIsUploadingAvatar(false);
   }
 
   async function changePasswordHandler(values: PasswordChangeFormValues) {
@@ -380,7 +408,7 @@ export function ProfilePage(): ReactNode {
                 <span>{session.type === "ai" ? "AI" : "Live"}</span>
               </div>
 
-              {session.result?.feedback ? (
+              {session.type === "ai" && session.result?.feedback ? (
                 <p className={styles.feedbackPreview}>
                   {session.result.feedback}
                 </p>
@@ -436,17 +464,29 @@ export function ProfilePage(): ReactNode {
       </div>
     </section>
   );
+  const avatarUrl = getAvatarUrl(user);
 
   return (
     <div className={`app-container ${styles.profilePage}`}>
       <section className={styles.heroCard}>
-        <p className={styles.kicker}>Профиль</p>
-        <h1 className={styles.title}>{user.name}</h1>
-        <p className={styles.subtitle}>{user.email}</p>
-        <div className={styles.badges}>
-          <span className={styles.badge}>
-            {user.role === "candidate" ? "Кандидат" : "Интервьюер"}
-          </span>
+        <div className={styles.heroContent}>
+          <div className={styles.profileAvatar}>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={user.name} />
+            ) : (
+              <span>{getUserInitial(user.name)}</span>
+            )}
+          </div>
+          <div>
+            <p className={styles.kicker}>Профиль</p>
+            <h1 className={styles.title}>{user.name}</h1>
+            <p className={styles.subtitle}>{user.email}</p>
+            <div className={styles.badges}>
+              <span className={styles.badge}>
+                {user.role === "candidate" ? "Кандидат" : "Интервьюер"}
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -455,6 +495,20 @@ export function ProfilePage(): ReactNode {
       <div className={styles.grid}>
         <section className={styles.card}>
           <h2 className={styles.cardTitle}>Данные аккаунта</h2>
+          <div className={styles.avatarUpload}>
+            <label className={styles.fileButton}>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                onChange={uploadAvatarHandler}
+                disabled={isUploadingAvatar}
+              />
+              {isUploadingAvatar ? "Загружаем..." : "Загрузить аватарку"}
+            </label>
+            {avatarMessage ? (
+              <p className={styles.message}>{avatarMessage}</p>
+            ) : null}
+          </div>
           <form
             className={styles.form}
             onSubmit={profileForm.handleSubmit(saveProfileHandler)}

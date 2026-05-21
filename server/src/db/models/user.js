@@ -109,6 +109,7 @@ module.exports = (sequelize, DataTypes) => {
       email: DataTypes.TEXT,
       password: DataTypes.TEXT,
       role: DataTypes.ENUM(...USER_ROLES),
+      avatar_url: DataTypes.TEXT,
     },
     {
       sequelize,

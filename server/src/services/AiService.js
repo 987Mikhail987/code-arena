@@ -1,11 +1,3 @@
-try {
-  process.loadEnvFile();
-} catch (error) {
-  if (error.code !== "ENOENT") {
-    throw error;
-  }
-}
-
 const { GigaChat } = require("gigachat");
 const { Agent } = require("node:https");
 const { getAnswer } = require("../agent");
@@ -178,7 +170,7 @@ class AiService {
         : "практическая задача";
 
     return [
-      "Ты технический интервьюер для учебного приложения CodeArena.",
+      "Ты технический интервьюер для учебного приложения GoInterview.",
       `Уровень: ${difficulty}.`,
       `Язык: ${programmingLanguage}.`,
       normalizedTopic ? `Тема: ${normalizedTopic}.` : "Тема не указана.",
@@ -244,7 +236,7 @@ class AiService {
       {
         role: "system",
         content: [
-          "Ты технический интервьюер CodeArena.",
+          "Ты технический интервьюер GoInterview.",
           `Уровень: ${difficulty}.`,
           `Язык: ${programmingLanguage}.`,
           normalizedTopic ? `Тема: ${normalizedTopic}.` : "Тема не указана.",
@@ -278,7 +270,7 @@ class AiService {
       {
         role: "system",
         content: [
-          "Ты технический интервьюер CodeArena.",
+          "Ты технический интервьюер GoInterview.",
           `Уровень: ${difficulty}.`,
           `Язык: ${programmingLanguage}.`,
 
@@ -462,7 +454,7 @@ class AiService {
       {
         role: "system",
         content: [
-          "Ты помощник технического интервьюера CodeArena.",
+          "Ты помощник технического интервьюера GoInterview.",
 
           "Твоя задача — определить, хватает ли данных для продолжения интервью, проверки ответа пользователя или перехода к следующему этапу.",
 
@@ -1032,7 +1024,7 @@ class AiService {
       {
         role: "system",
         content: [
-          "Ты технический интервьюер для учебного приложения CodeArena.",
+          "Ты технический интервьюер для учебного приложения GoInterview.",
           "Дай только итоговый анализ завершённого интервью.",
           "Не добавляй приветствие, JSON, markdown и служебные пояснения.",
           "Не предлагай новую задачу и не решай задачи за пользователя.",

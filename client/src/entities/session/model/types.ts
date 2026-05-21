@@ -19,6 +19,7 @@ export type MessageMetadataType = {
   senderId?: number;
   senderName?: string;
   senderRole?: string;
+  senderAvatarUrl?: string | null;
   itemType?: "practice" | "theory";
   task?: {
     description?: string;
@@ -45,7 +46,7 @@ export type MessageType = {
 export type SessionResultType = {
   messages: MessageType[];
   code: string;
-  feedback: string;
+  feedback?: string;
   finishReason?: string;
 };
 
@@ -66,6 +67,8 @@ export type SessionType = {
     name: string;
     email: string;
     role: string;
+    avatar_url?: string | null;
+    avatarUrl?: string | null;
   };
   participants?: {
     id: number;
@@ -78,6 +81,8 @@ export type SessionType = {
       name: string;
       email: string;
       role: string;
+      avatar_url?: string | null;
+      avatarUrl?: string | null;
     };
   }[];
   messages?: MessageType[];

@@ -79,6 +79,23 @@ export default class UserApi {
     }
   }
 
+  static async uploadAvatar(file: File): Promise<ApiResponse<User>> {
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      const response = await axiosInstance.put("/profile/avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        return error.response.data;
+      }
+      throw error;
+    }
+  }
+
   static async changePassword(payload: {
     password: string;
     newPassword: string;
