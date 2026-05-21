@@ -6,6 +6,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const corsConfig = require("./corsConfig");
 
+
 const serverConfig = (app) => {
   app.use(cookieParser());
   app.use(morgan("dev")); // логирует запросы

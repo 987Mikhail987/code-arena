@@ -1,5 +1,7 @@
+const corsOrigins = require("./corsOrigins");
+
 const corsConfig = {
-    origin: ['http://localhost:5173'],
+    origin: corsOrigins,
     credentials: true,
 }
 
