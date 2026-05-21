@@ -1,6 +1,7 @@
 const fs = require("fs/promises");
 const path = require("path");
 const { User } = require("../db/models");
+const { avatarsDir } = require("../config/uploadPaths");
 
 async function removeUploadedAvatar(avatarUrl) {
   if (!avatarUrl || !avatarUrl.startsWith("/uploads/avatars/")) {
@@ -8,7 +9,7 @@ async function removeUploadedAvatar(avatarUrl) {
   }
 
   const fileName = path.basename(avatarUrl);
-  const filePath = path.join(__dirname, "../public/uploads/avatars", fileName);
+  const filePath = path.join(avatarsDir, fileName);
 
   try {
     await fs.unlink(filePath);

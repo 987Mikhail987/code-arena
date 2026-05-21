@@ -1,10 +1,9 @@
 const crypto = require("crypto");
 const fs = require("fs");
-const path = require("path");
 const multer = require("multer");
 const formatResponse = require("../utils/formatResponse");
+const { avatarsDir } = require("../config/uploadPaths");
 
-const avatarsDir = path.join(__dirname, "../public/uploads/avatars");
 const allowedMimeTypes = new Set([
   "image/jpeg",
   "image/png",
