@@ -1,5 +1,5 @@
-const { Op } = require("sequelize");
 const { Message, Session, SessionParticipant, User } = require("../db/models");
+// const { Op } = require("sequelize");
 
 const userInclude = {
   model: User,
