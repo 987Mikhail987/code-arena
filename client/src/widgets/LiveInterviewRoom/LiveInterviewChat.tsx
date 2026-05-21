@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import type { MessageType } from "@/entities/session/model/types";
+import { getAvatarUrl, getUserInitial } from "@/shared/lib/avatar";
 import styles from "./LiveInterviewRoom.module.css";
 
 type LiveInterviewChatProps = {
@@ -76,14 +77,26 @@ export function LiveInterviewChat({
           messages.map((message) => {
             const senderName = message.metadata?.senderName || "Участник";
             const isOwnMessage = message.metadata?.senderId === currentUserId;
+            const avatarUrl = getAvatarUrl({
+              avatar_url: message.metadata?.senderAvatarUrl || null,
+            });
 
             return (
               <div
                 className={isOwnMessage ? styles.ownMessage : styles.message}
                 key={message.id}
               >
-                <strong>{isOwnMessage ? "Вы" : senderName}:</strong>{" "}
-                {message.content}
+                <div className={styles.messageAvatar}>
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={senderName} />
+                  ) : (
+                    <span>{getUserInitial(senderName)}</span>
+                  )}
+                </div>
+                <div className={styles.messageBody}>
+                  <strong>{isOwnMessage ? "Вы" : senderName}:</strong>{" "}
+                  {message.content}
+                </div>
               </div>
             );
           })

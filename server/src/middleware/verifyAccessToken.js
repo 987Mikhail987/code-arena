@@ -13,6 +13,7 @@ function verifyAccessToken(req, res, next) {
         .json(formatResponse(403, 'Невалидный accessToken'));
     }
 
+    req.user = user;
     res.locals.user = user;
 
     next();

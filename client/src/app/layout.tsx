@@ -5,7 +5,7 @@ import StoreProvider from "./providers/StoreProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CodeArena",
+  title: "GoInterview",
   description: "Learn",
 };
 

@@ -4,7 +4,7 @@ const { Message, Session, SessionParticipant, User } = require("../db/models");
 const userInclude = {
   model: User,
   as: "user",
-  attributes: ["id", "name", "email", "role"],
+  attributes: ["id", "name", "email", "role", "avatar_url"],
 };
 
 const participantInclude = {
@@ -14,7 +14,7 @@ const participantInclude = {
     {
       model: User,
       as: "user",
-      attributes: ["id", "name", "email", "role"],
+      attributes: ["id", "name", "email", "role", "avatar_url"],
     },
   ],
 };

@@ -9,6 +9,7 @@ import { clearUser } from "@/entities/user/model/userSlice";
 import UserApi from "@/entities/user/api/UserApi";
 import SessionApi from "@/entities/session/api/sessionApi";
 import { setAccessToken } from "@/shared/lib/axiosInstance";
+import { getAvatarUrl, getUserInitial } from "@/shared/lib/avatar";
 import styles from "./Header.module.css";
 
 type HeaderProps = {
@@ -20,6 +21,7 @@ export default function Header({ onToggleTheme }: HeaderProps) {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
   const [isCheckingSession, setIsCheckingSession] = useState(false);
+  const avatarUrl = getAvatarUrl(user);
 
   async function handleInterviewClick() {
     if (user?.role === "intervier") {
@@ -99,7 +101,11 @@ export default function Header({ onToggleTheme }: HeaderProps) {
           {user ? (
             <>
               <Link href="/profile" className={styles.userBadge}>
-                {user.name}
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={user.name} className={styles.userAvatar} />
+                ) : (
+                  <span className={styles.userInitial}>{getUserInitial(user.name)}</span>
+                )}
               </Link>
               <button
                 type="button"
