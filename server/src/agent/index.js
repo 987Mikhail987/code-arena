@@ -1,6 +1,3 @@
-const dotenv = require("dotenv");
-const { join } = require("path");
-
 const { HumanMessage, SystemMessage } = require("@langchain/core/messages");
 const { createReactAgent } = require("@langchain/langgraph/prebuilt");
 const { GigaChat } = require("langchain-gigachat");
@@ -9,7 +6,6 @@ const { Agent } = require("node:https");
 
 const { fallbackTool } = require("../tools/fallbackTool");
 
-dotenv.config({ path: join(__dirname, "../../.env") });
 
 
 

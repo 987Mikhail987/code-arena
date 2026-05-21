@@ -1,11 +1,3 @@
-try {
-  process.loadEnvFile();
-} catch (error) {
-  if (error.code !== "ENOENT") {
-    throw error;
-  }
-}
-
 const { GigaChat } = require("gigachat");
 const { Agent } = require("node:https");
 const { getAnswer } = require("../agent");
