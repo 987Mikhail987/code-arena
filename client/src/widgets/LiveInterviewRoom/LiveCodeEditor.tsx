@@ -27,10 +27,21 @@ export function LiveCodeEditor({
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const bindingRef = useRef<{ destroy: () => void } | null>(null);
   const docRef = useRef<Y.Doc | null>(null);
+  const initialCodeRef = useRef(initialCode);
+  const onCodeChangeRef = useRef(onCodeChange);
+  const [isEditorReady, setIsEditorReady] = useState(false);
   const [isSynced, setIsSynced] = useState(false);
 
   useEffect(() => {
-    if (!socket || !editorRef.current) {
+    initialCodeRef.current = initialCode;
+  }, [initialCode]);
+
+  useEffect(() => {
+    onCodeChangeRef.current = onCodeChange;
+  }, [onCodeChange]);
+
+  useEffect(() => {
+    if (!socket || !isEditorReady || !editorRef.current) {
       return;
     }
 
@@ -56,7 +67,7 @@ export function LiveCodeEditor({
 
       bindingRef.current = new MonacoBinding(text, model, new Set([editor]));
       setIsSynced(true);
-      onCodeChange?.(model.getValue());
+      onCodeChangeRef.current?.(model.getValue());
     }
 
     function handleCodeSync(update: number[]) {
@@ -86,13 +97,13 @@ export function LiveCodeEditor({
     if (activeSocket.connected) {
       activeSocket.emit("live:code:sync:request", {
         roomId,
-        initialCode,
+        initialCode: initialCodeRef.current,
       });
     } else {
       activeSocket.once("connect", () => {
         activeSocket.emit("live:code:sync:request", {
           roomId,
-          initialCode,
+          initialCode: initialCodeRef.current,
         });
       });
     }
@@ -108,14 +119,15 @@ export function LiveCodeEditor({
       docRef.current = null;
       setIsSynced(false);
     };
-  }, [initialCode, onCodeChange, roomId, socket]);
+  }, [isEditorReady, roomId, socket]);
 
   const handleMount: OnMount = (editor) => {
     editorRef.current = editor;
-    onCodeChange?.(editor.getValue());
+    setIsEditorReady(true);
+    onCodeChangeRef.current?.(editor.getValue());
 
     editor.onDidChangeModelContent(() => {
-      onCodeChange?.(editor.getValue());
+      onCodeChangeRef.current?.(editor.getValue());
     });
   };
 
