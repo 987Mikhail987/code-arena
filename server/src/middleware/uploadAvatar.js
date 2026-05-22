@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const fs = require("fs");
+const path = require("path");
 const multer = require("multer");
 const formatResponse = require("../utils/formatResponse");
 const { avatarsDir } = require("../config/uploadPaths");
