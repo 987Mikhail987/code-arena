@@ -84,9 +84,7 @@ export default class UserApi {
     formData.append("avatar", file);
 
     try {
-      const response = await axiosInstance.put("/profile/avatar", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const response = await axiosInstance.put("/profile/avatar", formData);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
