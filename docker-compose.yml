@@ -24,11 +24,14 @@ services:
     env_file: .env
     environment:
       NODE_ENV: production
+      UPLOADS_DIR: /app/uploads
     depends_on:
       postgres:
         condition: service_healthy
     expose:
       - "3000"
+    volumes:
+      - api_uploads:/app/uploads
 
   web:
     build:
@@ -57,3 +60,4 @@ volumes:
   pgdata:
   caddy_data:
   caddy_config:
+  api_uploads:
